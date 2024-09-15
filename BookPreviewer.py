@@ -306,19 +306,13 @@ class MainUI(QWidget):
             linebar = QHBoxLayout()
             lbl_weekname = QLabel('')
             lbl_weekname.setObjectName('SubGraph')
-            # lbl_weekname.setFixedWidth(self.content_width*10//100)
             linebar.addWidget(lbl_weekname)
-            # lbl_bar = QLabel('')
-            # # lbl_bar.setObjectName('bar')
-            # linebar.addWidget(lbl_bar)
             lbl_bar = QProgressBar()
-            # lbl_bar.setObjectName('bar')
             linebar.addWidget(lbl_bar)
             linebar.addStretch()
             self.lyt_weekBars.addLayout(linebar)
         diagram_week.addWidget(lbl_week)
         diagram_week.addLayout(self.lyt_weekBars)
-        # self.diagram_page.addWidget(week_widget)
         self.diagram_page_layout.addWidget(week_widget)
 
 
@@ -409,13 +403,6 @@ class MainUI(QWidget):
                 bar.setTextVisible(True)
                 bar_value = f" {count}"
                 bar.setFormat(bar_value)
-                # font_metrics = QFontMetrics(bar.font())
-                # text_width = font_metrics.horizontalAdvance(bar_value)
-                # progress_bar_length = bar_width * max_barwidth // 100
-                # if text_width > progress_bar_length:
-                #     shift = " "*(progress_bar_length//5)
-                #     bar.setFormat(f"{shift}{bar_value}")
-                # bar = QProgressBar()
                 bar.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
     def update_month_diagram(self):
