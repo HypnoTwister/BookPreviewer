@@ -11,6 +11,7 @@
     border: 1px solid #ff09998d;
     border-radius: 6px;
     background-color: #1509998d;
+    /* background: red; */
     padding:0px;
 }
 
@@ -19,11 +20,12 @@ QWidget#srcArea{
     background-color: transparent;
     padding:0px;
 }
-/* QScrollArea */
-/* QWidget#sourceEditWidget,#sourceScrollArea,#scrollAreaWidgetContents{
+
+QWidget#diagram_head{
     border:none;
-    background-color: #eefaee;
-} */
+    background-color: transparent;
+    padding:0px;
+}
 
 /* QPushButton H1 */
 QPushButton#H1 {
@@ -103,9 +105,33 @@ QPushButton#square:hover {
 }
 QPushButton#square:pressed {
     border: 1px solid #000000;
-    background-color: transparent;
+    background-color: #1509998d;
 }
 QPushButton#square:checked {
+    border: 1px solid #000000;
+    background-color: transparent;
+}
+
+/* QPushButton next */
+QPushButton#next {
+    font-size: 16px;
+    border: 1px solid darkgray;
+    border-radius: 4px;
+    background-color: transparent;
+    color: black;
+    padding: 2px;
+    /* width:18px;
+    height:18px; */
+}
+QPushButton#next:hover {
+    border: 1px solid #000000;
+    background-color: transparent;
+}
+QPushButton#next:pressed {
+    border: 1px solid #000000;
+    background-color: #1509998d;
+}
+QPushButton#next:checked {
     border: 1px solid #000000;
     background-color: transparent;
 }
@@ -118,7 +144,7 @@ QPushButton#ico {
     border-radius: 4px;
     background-color: transparent;
     color: black;
-    padding: 0px 0px 2px 1px;
+    padding: 0px 0px 1px 1px;
     /* width:18px;
     height:18px; */
 }
@@ -128,13 +154,36 @@ QPushButton#ico:hover {
 }
 QPushButton#ico:pressed {
     border: 1px solid #000000;
-    background-color: transparent;
+    background-color: #1509998d;
 }
 QPushButton#ico:checked {
     border: 1px solid #000000;
     background-color: transparent;
 }
 
+/* QPushButton tab */
+QPushButton#tab {
+    font-size: 18px;
+    /* font-weight: bold; */
+    border: 1px solid #09998d;
+    border-radius: 4px;
+    background-color: #1509998d;
+    color: #3f3f3f;
+    padding: 4px 18px 4px 18px;
+}
+QPushButton#tab:hover {
+    border: 1px solid #09998d;
+    background-color: #4a09998d;
+}
+QPushButton#tab:pressed {
+    border: 1px solid #09998d;
+    background-color: #4a09998d;
+}
+QPushButton#tab:checked {
+    border: 1px solid #09998d;
+    color: #055852;
+    background-color: #4a09998d;
+}
 /* QPushButton Warning */
 QPushButton#Warning {
     font-size: 12px;
@@ -175,14 +224,21 @@ QPushButton#sidebar:checked {
     background-color: rgba(255, 255, 255, 0.5);
 }
 
+QLabel#info{
+    font-size: 14px;
+    padding: 2px;
+    color: #3f3f3f;
+    background: transparent;
+}
 
 /* QLabel */
 QLabel#H1{
+    font-family: 等线;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 36px;
     padding: 0px;
     border: none;
-    color: black;
+    color: #3f3f3f;
 }
 /* QLabel */
 QLabel#HighLight{
@@ -212,9 +268,16 @@ QLabel#Graph{
 QLabel#HeaderGraph{
     /* font-weight: bold; */
     font-size: 20px;
-    border-bottom: 1px solid #09998d;
+    /* border-bottom: 1px solid #09998d; */
     /* border-radius: 4px; */
     color: #3f3f3f;
+    background: transparent;
+}
+QLabel#Hline{
+    font-size:1px;
+    padding: 0px;
+    border-bottom: 1px solid #09998d;
+    /* color:transparent; */
     background: transparent;
 }
 QLabel#SubGraph{
@@ -232,7 +295,6 @@ QLabel#bar{
     border: 0px;
     border-radius: 2px;
     color: white;
-    overflow: visible;
     background: #4a09998d;
 }
 QLabel#bar:hover{
@@ -284,6 +346,8 @@ QLabel#month_day{
     background: transparent;
     /* background:red; */
 }
+
+
 /* QLineEdit */
 QLineEdit#H1{
     border: none;
@@ -336,7 +400,7 @@ QProgressBar{
     padding: 0px;
     border: 0px;
     border-radius: 2px;
-    color: #3f3f3f;
+    color: gray;
     background-color: transparent;
 }
 

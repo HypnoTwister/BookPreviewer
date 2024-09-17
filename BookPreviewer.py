@@ -15,8 +15,6 @@ def resource_path(relativePath):
         base_path = os.path.abspath('.')
     return os.path.join(base_path, relativePath)
 
-# READING = "第2章-第1节.txt"
-# READING = "测试文章.txt"
 
 PUNCTUATION_STR = r'；：\-，。“”‘’？——！《》￥@#%……&*（）|、~·【】'
 LETTERS = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
@@ -45,6 +43,15 @@ def load_custom_font():
         return font_family
     return '微软雅黑'
 
+class CustomHLine(QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setText('')
+        self.setObjectName('Hline')
+        self.setFixedHeight(1)
+        self.setMargin(0)
+        self.setContentsMargins(0,0,0,0)
+
 class CustomTextEdit(QTextEdit):
     def __init__(self, parent=None, logger = None):
         super().__init__(parent)
@@ -56,41 +63,11 @@ class CustomTextEdit(QTextEdit):
         self.setCursor(Qt.ArrowCursor)
         self.currentBlock = 0
         self.logger = logger
-        # self.setAutoFillBackground(False)
-        # # 添加事件过滤器
-    #     self.installEventFilter(self)
-
-    # def eventFilter(self, obj, event):
-    #     if event.type() in [QEvent.MouseButtonPress, QEvent.MouseButtonRelease]:
-    #         # 禁用所有鼠标点击事件，使其不响应任何点击
-    #         return True
-    #     return super().eventFilter(obj, event)
 
     def wheelEvent(self, event):
         # 处理滚轮事件以确保可以滚动
         self.refreshingBlockNum(event)
         super().wheelEvent(event)
-
-    # def mousePressEvent(self, event):
-    #     # 获取当前点击的block号
-    #     cursor = self.cursorForPosition(event.pos())
-    #     block_number = cursor.blockNumber()
-    #     print(f"Clicked on block number: {block_number}")
-    #     super().mousePressEvent(event)
-
-    # def mouseDoubleClickEvent(self, event):
-    #     # 禁用鼠标 DoubleClick
-    #     pass
-
-    # def mouseReleaseEvent(self, event):
-    #     # 禁用鼠标释放事件
-    #     pass
-
-    # def enterEvent(self, event):
-    #     # 禁用鼠标 enter
-    #     self.setCursor(Qt.ArrowCursor)  # 将光标设置为箭头形状
-    #     super().enterEvent(event)
-    #     # pass
 
     def mouseMoveEvent(self, event):
          # 获取当前点击的block号
@@ -102,6 +79,35 @@ class CustomTextEdit(QTextEdit):
             cursor = self.cursorForPosition(event.pos())
             self.currentBlock = cursor.blockNumber()+1
             self.logger.setText(f'当前:{self.currentBlock}')
+
+class ClickableProgressBar(QProgressBar):
+    hover = pyqtSignal(object)  # 修改信号定义，使其接受一个参数
+
+    def __init__(self, parent=None, info=None):
+        super().__init__(parent)
+        self.info = info  # 存储相关信息
+
+    def enterEvent(self, event):
+        self.hover.emit(self.info)  # 发出信号并传递相关信息
+        super().enterEvent(event)
+
+class SummaryGraph(QWidget):
+    def __init__(self, label, sum = 0):
+        super().__init__()
+        self.sum_layout = QVBoxLayout(self)
+        self.current_label = QLabel(f"{label}字数")
+        self.current_count_label = QLabel("{:,}".format(sum))
+        self.sum_layout.addWidget(self.current_label)
+        self.sum_layout.addWidget(CustomHLine())
+        self.sum_layout.addWidget(self.current_count_label)
+        self.current_label.setObjectName('SubGraph')
+        self.current_count_label.setObjectName('H1')
+        # self.current_count_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.current_count_label.setContentsMargins(30,0,0,0)
+
+    def setSummary(self, sum, label = ''):
+        if label != '': self.current_label.setText(f"{label}字数")
+        self.current_count_label.setText("{:,}".format(sum))
 
 class MainUI(QWidget):
     def __init__(self):
@@ -116,6 +122,7 @@ class MainUI(QWidget):
         self.edge_spacing = self.main_height//40
         self.head_btn_size = self.main_height//32
         self.setFixedSize(self.main_width, self.main_height)
+        self.font_sizes = [6, 20]
         # 禁用窗口装饰，模拟手机屏幕外观
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)  # 使窗口背景透明
@@ -157,8 +164,6 @@ class MainUI(QWidget):
         self.btn_open.setFixedHeight(self.head_btn_size)
         self.btn_open.clicked.connect(self.open_folder)
         self.btn_tabs = QPushButton('A')
-        # self.btn_tabs.setCheckable(True)
-        # self.btn_tabs.setChecked(True)
         self.btn_tabs.setObjectName('ico')
         self.btn_tabs.setFixedWidth(self.head_btn_size)
         self.btn_tabs.setFixedHeight(self.head_btn_size)
@@ -232,27 +237,12 @@ class MainUI(QWidget):
 
         # --------------------图表----------------------
         content = QHBoxLayout()
-        self.diagram_page = QScrollArea()
-        self.diagram_page.setObjectName('srcArea')
-        # self.diagram_page.setWidgetResizable(True)
-        self.diagram_page.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.diagram_page.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.diagram_page.setViewportMargins(-10,0,0,0)
-        self.diagram_page.setContentsMargins(0,0,0,0)
-        self.diagram_page.setFixedWidth(self.content_width)
-        self.diagram_page.setFixedHeight(self.content_height)
-
-        self.diagram_page_widget = QWidget()
-        self.diagram_page_widget.setObjectName('srcArea')
-        self.diagram_page_widget.setContentsMargins(0,0,0,0)
-        # self.diagram_page_widget.setFixedWidth(self.content_width)
-        # self.diagram_page_widget.setFixedHeight(self.content_height)
-
-        self.diagram_page_layout = QVBoxLayout(self.diagram_page_widget)
-        self.diagrams_page_gui()
-        self.diagram_page.setWidget(self.diagram_page_widget)
-        content.addSpacing(self.edge_spacing)
-        content.addWidget(self.diagram_page)
+        self.diagram_page_layout = QVBoxLayout()
+        self.on_diagrams_header_gui()
+        self.on_diagrams_bannar_gui()
+        self.on_diagrams_page_gui()
+        content.addStretch()
+        content.addLayout(self.diagram_page_layout)
         content.addStretch()
         layout.addLayout(content)
         # ----------------------End----------------------
@@ -260,6 +250,11 @@ class MainUI(QWidget):
         self.switch_to_book_content(True)
         layout.addStretch()
         self.setLayout(layout)
+
+    def on_diagrams_bannar_gui(self):
+        self.info_bannar = QLabel('')
+        self.info_bannar.setObjectName('info')
+        self.diagram_page_layout.addWidget(self.info_bannar)
 
     def tab_switching(self):
         if self.btn_tabs.text() != 'A':
@@ -286,50 +281,166 @@ class MainUI(QWidget):
         self.text_edit.setVisible(visible)
         self.counter.setVisible(visible)
         self.block_pos.setVisible(visible)
-        self.diagram_page.setVisible(not(visible))
-        self.diagram_page_widget.setVisible(not(visible))
+        self.info_bannar.setVisible(not(visible))
         self.set_layout_vis(self.diagram_page_layout, not(visible))
+        self.refresh_graph_widgets_visible(not(visible))
+        self.set_layout_vis(self.diagram_head, not(visible))
 
-    def diagrams_page_gui(self):
-        week_widget = QWidget()
-        diagram_week = QVBoxLayout()
-        week_widget.setLayout(diagram_week)
-        week_widget.setObjectName('borderblock')
-        week_widget.setFixedWidth(self.content_width-6)
-        today = datetime.date.today()
-        weekfrom = today-datetime.timedelta(days=6)
-        lbl_week = QLabel(f'周视图: {weekfrom.month}/{weekfrom.day}-{today.month}/{today.day}')
-        lbl_week.setObjectName('HeaderGraph')
-        self.lyt_weekBars = QVBoxLayout()
+    def on_diagrams_page_gui(self):
+        self.on_today_widget_gui()
+        self.on_week_widget_gui()
+        self.on_month_widget_gui()
+        self.diagram_page_layout.addStretch()
 
-        for i in range(7):
-            linebar = QHBoxLayout()
-            lbl_weekname = QLabel('')
-            lbl_weekname.setObjectName('SubGraph')
-            linebar.addWidget(lbl_weekname)
-            lbl_bar = QProgressBar()
-            linebar.addWidget(lbl_bar)
-            linebar.addStretch()
-            self.lyt_weekBars.addLayout(linebar)
-        diagram_week.addWidget(lbl_week)
-        diagram_week.addLayout(self.lyt_weekBars)
-        self.diagram_page_layout.addWidget(week_widget)
+    def on_today_widget_gui(self):
+        self.update_writing_count()
+        self.today_summary_widget = SummaryGraph('今日')
+        self.book_summary_widget = SummaryGraph('全本')
+        self.week_summary_widget = SummaryGraph('本周')
+        self.month_summary_widget = SummaryGraph('本月')
+        self.summaries = QVBoxLayout()
+        self.summaries.addWidget(self.today_summary_widget)
+        self.summaries.addWidget(self.book_summary_widget)
+        self.summaries.addWidget(self.week_summary_widget)
+        self.summaries.addWidget(self.month_summary_widget)
+        self.diagram_page_layout.addLayout(self.summaries)
 
 
-        # ----------------------------------------------------------
-        month_widget = QWidget()
-        diagram_month = QVBoxLayout()
-        month_widget.setLayout(diagram_month)
-        month_widget.setObjectName('borderblock')
-        month_widget.setFixedWidth(self.content_width-6)
+    def on_diagrams_header_gui(self):
+        # self.diagram_head = QHBoxLayout()
+        self.diagram_head_widget = QWidget()
+        self.diagram_head_widget.setObjectName('diagram_head')
+        self.diagram_head = QHBoxLayout(self.diagram_head_widget)
 
-        lbl_month = QLabel(f'月视图: {today.month}月')
-        lbl_month.setObjectName('HeaderGraph')
+        tab_btn_0 = QPushButton(' 统计 ')
+        tab_btn_0.setFixedWidth((self.content_width-18)//3)
+
+        tab_btn_1 = QPushButton('周视图')
+        tab_btn_1.setFixedWidth((self.content_width-18)//3)
+
+        tab_btn_2 = QPushButton('月视图')
+        tab_btn_2.setFixedWidth((self.content_width-18)//3)
+
+        tab_btn_0.setObjectName('tab')
+        tab_btn_1.setObjectName('tab')
+        tab_btn_2.setObjectName('tab')
+
+        tab_btn_0.setCheckable(True)
+        tab_btn_1.setCheckable(True)
+        tab_btn_2.setCheckable(True)
+
+        tab_btn_0.setChecked(True)
+
+        self.btns_tabHeader = QButtonGroup(self)
+        self.btns_tabHeader.setExclusive(True)
+        # self.btns_tabHeader.buttonToggled.connect(self.on_graph_widget_changed)
+        self.btns_tabHeader.buttonClicked.connect(self.on_graph_widget_changed)
+        self.btns_tabHeader.addButton(tab_btn_0,0)
+        self.btns_tabHeader.addButton(tab_btn_1,1)
+        self.btns_tabHeader.addButton(tab_btn_2,2)
+
+        # self.diagram_head.addSpacing(self.edge_spacing)
+        # self.diagram_head.addStretch()
+        self.diagram_head.addWidget(tab_btn_0)
+        self.diagram_head.addWidget(tab_btn_1)
+        self.diagram_head.addWidget(tab_btn_2)
+        self.diagram_head.setContentsMargins(0,0,0,0)
+        # self.diagram_head.addStretch()
+        self.diagram_page_layout.addWidget(self.diagram_head_widget)
+
+    def on_graph_widget_changed(self):
+        self.activeMonDay = datetime.date.today()
+        self.activeWeekDay = datetime.date.today()
+
+        self.refresh_label_week()
+        self.refresh_label_month()
+        self.build_monthly_data()
+        self.update_diagrams()
+        self.refresh_graph_widgets_visible(self.btn_tabs.text() != 'A')
+
+    def refresh_graph_widgets_visible(self,vis):
+        idx = self.btns_tabHeader.checkedId()
+        self.info_bannar.setText('')
+        print(f'current tab: {idx}')
+        switch_today = (idx == 0) and vis
+        switch_week = (idx == 1) and vis
+        switch_month = (idx == 2) and vis
+
+        self.set_layout_vis(self.summaries, switch_today)
+
+        self.set_layout_vis(self.week_diagram_layout, switch_week)
+        self.week_widget.setVisible(switch_week)
+        self.set_layout_vis(self.month_diagram_layout, switch_month)
+        self.month_widget.setVisible(switch_month)
+
+    def on_month_widget_gui(self):
+        self.activeMonDay = datetime.date.today()
+        self.month_widget = QWidget()
+        self.month_diagram_layout = QVBoxLayout()
+        self.month_widget.setLayout(self.month_diagram_layout)
+        self.month_widget.setObjectName('borderblock')
+        # self.month_widget.setFixedWidth(self.content_width)
+
+        btn_last_month = QPushButton('<')
+        btn_last_month.setObjectName('next')
+        btn_next_month = QPushButton('>')
+        btn_next_month.setObjectName('next')
+        btn_last_month.clicked.connect(self.on_last_month_clicked)
+        btn_next_month.clicked.connect(self.on_next_month_clicked)
+
+        month_header = QHBoxLayout()
+        self.lbl_month = QLabel(f'{self.activeMonDay.year}/{self.activeMonDay.month}')
+        self.lbl_month.setObjectName('HeaderGraph')
+        self.lbl_month.setFixedWidth(self.content_width//2)
+        self.lbl_month.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        btn_last_month.setFixedWidth(self.head_btn_size)
+        btn_last_month.setFixedHeight(self.head_btn_size)
+        btn_next_month.setFixedWidth(self.head_btn_size)
+        btn_next_month.setFixedHeight(self.head_btn_size)
+        month_header.addStretch()
+        month_header.addWidget(btn_last_month)
+        month_header.addWidget(self.lbl_month)
+        month_header.addWidget(btn_next_month)
+        month_header.addStretch()
+
         self.month_graph = QHBoxLayout()
         self.month_list = QVBoxLayout()
-        month_range = self.get_current_monthdays(datetime.date.today())
+        self.lyt_vbox = QVBoxLayout()
+        self.lyt_monthBars = QVBoxLayout()
 
-        offset = 6
+        self.build_monthly_data()
+        self.month_list.addSpacing(6)
+        self.lyt_monthBars.addStretch()
+        self.lyt_vbox.addSpacing(6)
+        self.lyt_vbox.addLayout(self.lyt_monthBars)
+        self.month_graph.addLayout(self.month_list)
+        self.month_graph.addLayout(self.lyt_vbox)
+        self.month_graph.addStretch()
+
+        self.month_diagram_layout.addLayout(month_header)
+        self.month_diagram_layout.addWidget(CustomHLine())
+        self.month_diagram_layout.addLayout(self.month_graph)
+        self.diagram_page_layout.addWidget(self.month_widget)
+
+    def build_monthly_data(self):
+        for i in reversed(range(self.month_list.count())):
+            item = self.month_list.itemAt(i)
+            mw = item.widget()
+            if mw is not None:
+                mw.deleteLater()
+            if item is not None:
+                self.month_list.removeItem(item)
+
+        for j in reversed(range(self.lyt_monthBars.count())):
+            item = self.lyt_monthBars.itemAt(j)
+            bw = item.widget()
+            if bw is not None:
+                bw.deleteLater()
+            if item is not None:
+                self.lyt_monthBars.removeItem(item)
+
+        # print(f"MonthBar count: {self.lyt_monthBars.count()}")
+        month_range = self.get_current_monthdays(self.activeMonDay)
         lastm = 0
         for m in range(month_range):
             currentlbl = (m//3)+1
@@ -342,115 +453,246 @@ class MainUI(QWidget):
             lbl_dayname.setAlignment(Qt.AlignTop)
             lbl_dayname.setFixedHeight(28)
             self.month_list.addWidget(lbl_dayname)
+            # print(f"Add to month list: {lbl_dayname.text()}")
         # self.month_list.addStretch()
-        self.month_list.addSpacing(offset)
         # self.month_list.setFixedWidth(self.content_width*10//100)
-        lyt_vbox = QVBoxLayout()
-        self.lyt_monthBars = QVBoxLayout()
-        lyt_vbox.addSpacing(offset)
+        max_barwidth = self.content_width*88//100 - self.edge_spacing
+
         for i in range(month_range):
-            lbl_bar = QLabel('')
-            lbl_bar.setFixedWidth(0)
+            # lbl_bar = QLabel('')
+            lbl_bar = ClickableProgressBar()
+            lbl_bar.hover.connect(self.on_diagram_bar_hoverring)
+            lbl_bar.setTextVisible(False)
+            lbl_bar.setFixedWidth(max_barwidth)
             lbl_bar.setFixedHeight(6)
+            lbl_bar.setValue(2)
             self.lyt_monthBars.addWidget(lbl_bar)
-        self.lyt_monthBars.addStretch()
-        lyt_vbox.addLayout(self.lyt_monthBars)
-        self.month_graph.addLayout(self.month_list)
-        self.month_graph.addLayout(lyt_vbox)
-        self.month_graph.addStretch()
+            # print(f"Add to lyt_monthBars: {lbl_bar.value()}")
 
-        diagram_month.addWidget(lbl_month)
-        diagram_month.addLayout(self.month_graph)
-        self.diagram_page_layout.addWidget(month_widget)
+        # print(f"MonthBar count -> End: {self.lyt_monthBars.count()}")
 
-        self.diagram_page_layout.addStretch()
+    def on_next_month_clicked(self):
+        today = datetime.date.today()
+        if (self.activeMonDay.replace(day=1)-today.replace(day=1)) >= datetime.timedelta(days=0):
+            print("已经是最新了.")
+            return
+        if self.activeMonDay.month == 12:
+            self.activeMonDay = datetime.date(self.activeMonDay.year + 1, 1, 1)
+        else:
+            self.activeMonDay = datetime.date(self.activeMonDay.year, self.activeMonDay.month + 1, 1)
+        self.refresh_label_month()
+        self.build_monthly_data()
+        self.update_month_diagram()
+
+    def refresh_label_month(self):
+        self.lbl_month.setText(f'{self.activeMonDay.year}/{self.activeMonDay.month}')
+
+    def on_last_month_clicked(self):
+        if self.activeMonDay.month == 1 and (self.activeMonDay.year > self.get_record_start().year):
+            self.activeMonDay = datetime.date(self.activeMonDay.year - 1, 12, 1)
+        elif self.activeMonDay >= self.get_record_start() and self.activeMonDay.month > 1:
+            self.activeMonDay = datetime.date(self.activeMonDay.year, self.activeMonDay.month-1, 1)
+        else: return
+        self.refresh_label_month()
+        self.build_monthly_data()
+        self.update_month_diagram()
+
+    def get_record_start(self) -> int:
+        record_start = datetime.date(2000,1,1)
+        if self.records != {} and self.records != None: record_start = list(self.records.keys())[0]
+        print(f'获取最早记录：{record_start}')
+        return record_start
+
+    def on_next_week_clicked(self):
+        if (self.activeWeekDay-datetime.date.today()) >= datetime.timedelta(0):
+            print("已经是最新了.")
+            return
+        self.activeWeekDay += datetime.timedelta(days=7)
+        self.refresh_label_week()
+        self.update_week_diagram()
+
+    def on_last_week_clicked(self):
+        if (self.activeWeekDay - datetime.timedelta(days=7)) < self.get_record_start():
+            print('前面没有了.')
+            return
+        self.activeWeekDay -= datetime.timedelta(days=7)
+        self.refresh_label_week()
+        self.update_week_diagram()
+
+    def on_week_widget_gui(self):
+        # today = datetime.date.today()
+        self.activeWeekDay = datetime.date.today()
+        self.week_widget = QWidget()
+        self.week_diagram_layout = QVBoxLayout()
+        self.week_widget.setLayout(self.week_diagram_layout)
+        self.week_widget.setObjectName('borderblock')
+        # self.week_widget.setFixedWidth(self.content_width)
+
+        week_header = QHBoxLayout()
+        self.lbl_week = QLabel('')
+        self.refresh_label_week()
+        self.lbl_week.setObjectName('HeaderGraph')
+        self.lbl_week.setFixedWidth(self.content_width//2)
+        self.lbl_week.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+        btn_last_week = QPushButton('<')
+        btn_last_week.setObjectName('next')
+        btn_next_week = QPushButton('>')
+        btn_next_week.setObjectName('next')
+
+        btn_last_week.clicked.connect(self.on_last_week_clicked)
+        btn_next_week.clicked.connect(self.on_next_week_clicked)
+
+        btn_last_week.setFixedWidth(self.head_btn_size)
+        btn_last_week.setFixedHeight(self.head_btn_size)
+        btn_next_week.setFixedWidth(self.head_btn_size)
+        btn_next_week.setFixedHeight(self.head_btn_size)
+        week_header.addStretch()
+        week_header.addWidget(btn_last_week)
+        week_header.addWidget(self.lbl_week)
+        week_header.addWidget(btn_next_week)
+        week_header.addStretch()
+
+        self.lyt_weekBars = QVBoxLayout()
+
+        self.build_weekly_gui()
+
+        self.week_diagram_layout.addLayout(week_header)
+        self.week_diagram_layout.addWidget(CustomHLine())
+        self.week_diagram_layout.addLayout(self.lyt_weekBars)
+        self.diagram_page_layout.addWidget(self.week_widget)
+
+    def refresh_label_week(self):
+        weekfrom = self.activeWeekDay-datetime.timedelta(days=6)
+        self.lbl_week.setText(f'{weekfrom.month}/{weekfrom.day}-{self.activeWeekDay.month}/{self.activeWeekDay.day}')
+
+    def build_weekly_gui(self):
+        for i in reversed(range(self.lyt_weekBars.count())):
+            lyt = self.lyt_weekBars.itemAt(i).layout()
+            if lyt is not None:
+                for w in reversed(range(lyt.count())):
+                    widget = lyt.itemAt(w).widget()
+                    if widget is not None:
+                        widget.deleteLater()
+                lyt.deleteLater()
+
+        for i in range(7):
+            linebar = QHBoxLayout()
+            lbl_weekname = QLabel('')
+            lbl_weekname.setObjectName('SubGraph')
+            linebar.addWidget(lbl_weekname)
+            lbl_bar = ClickableProgressBar()
+            lbl_bar.hover.connect(self.on_diagram_bar_hoverring)
+            linebar.addWidget(lbl_bar)
+            linebar.addStretch()
+            self.lyt_weekBars.addLayout(linebar)
+
+    def on_diagram_bar_hoverring(self, info):
+        if info in self.records:
+            self.info_bannar.setText(f"{info.month}/{info.day} {self.records[info]}")
 
     def update_diagrams(self):
         self.records = self.get_records()
         self.update_week_diagram()
         self.update_month_diagram()
+        self.update_summary_diagram()
+
+    def update_summary_diagram(self):
+        self.today_summary_widget.setSummary(list(self.records.values())[-1])
+        self.book_summary_widget.setSummary(self.current_sum)
+        week_sum = self.get_recently_summaries()
+        self.week_summary_widget.setSummary(week_sum)
+        month_sum = self.get_recently_summaries(self.get_current_monthdays(datetime.date.today()))
+        self.month_summary_widget.setSummary(month_sum)
+
+    def get_recently_summaries(self, day_length = 7):
+        recently_date = datetime.date.today() - datetime.timedelta(days = day_length)
+        pre_sum = 0
+        record_list = list(self.records.values())
+        for i in range(len(record_list)):
+            if record_list[i] > pre_sum and list(self.records.keys())[i] < recently_date:
+                pre_sum = record_list[i]
+        sum = self.current_sum - pre_sum
+        return sum
 
     def update_week_diagram(self):
+        # print("Updating Week Graph")
         self.records_in_week = self.filted_date()
         # print(self.records_in_week)
-        max_count = max(self.records_in_week.values(), default=1)
+        max_count = max(1,max(self.records_in_week.values(), default=1))
         max_barwidth = self.content_width*88//100 - self.edge_spacing - 8
-        today = datetime.date.today()
+        today = self.activeWeekDay
         for i in range(7):
             date = today-datetime.timedelta(days=6) + datetime.timedelta(days=i)
             count = self.records_in_week.get(date, 0)
             barname = self.lyt_weekBars.itemAt(i).layout().itemAt(0).widget()
-            bar = self.lyt_weekBars.itemAt(i).layout().itemAt(1).widget()
+            week_bar = self.lyt_weekBars.itemAt(i).layout().itemAt(1).widget()
             if isinstance(barname, QLabel):
-                if i==6 :barname.setText('今')
-                else: barname.setText(str(date.day))
+                barname.setText(str(date.day))
                 barname.setFixedWidth(16)
-            if isinstance(bar, QProgressBar):
-                bar_width = count*100//max_count
-                bar.setMaximum(100)
-                if bar_width<0:
-                    bar_width = abs(bar_width)
-                    bar.setObjectName('bar-minus')
-                elif bar_width == 0:
-                    bar.setObjectName('bar-zero')
+            if isinstance(week_bar, QProgressBar):
+                week_bar_width = count*100//max_count
+                week_bar.setMaximum(100)
+                if week_bar_width<0:
+                    week_bar_width = abs(week_bar_width)
+                    week_bar.setObjectName('bar-minus')
+                elif week_bar_width == 0:
+                    week_bar.setObjectName('bar-zero')
                 elif i==today.day-1:
-                    bar.setObjectName('bar-h')
+                    week_bar.setObjectName('bar-h')
                 else:
-                    bar.setObjectName('bar')
-                bar_width = max(2,bar_width)
-                bar.setValue(bar_width)
-                bar.setFixedWidth(max_barwidth)
-                bar.setTextVisible(True)
+                    week_bar.setObjectName('bar')
+                week_bar_width = max(2,week_bar_width)
+                week_bar.info = date
+                week_bar.setValue(week_bar_width)
+                week_bar.setFixedWidth(max_barwidth)
+                week_bar.setTextVisible(True)
                 bar_value = f" {count}"
-                bar.setFormat(bar_value)
-                bar.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+                week_bar.setFormat(bar_value)
+                week_bar.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+                week_bar.style().unpolish(week_bar)
+                week_bar.style().polish(week_bar)
 
     def update_month_diagram(self):
+        # print("Updating Month Graph")
         self.records_in_month = self.filted_date('month')
-        print(self.records_in_month)
-        today = datetime.date.today()
-        # day_range = (today - today.replace(day=1) + datetime.timedelta(days = 1)).days
-        month_range = self.get_current_monthdays(datetime.date.today())
-        max_count = max(self.records_in_month.values(), default=1)
-        max_barwidth = self.content_width*90//100 - self.edge_spacing
-        print(month_range)
+        month_range = self.get_current_monthdays(self.activeMonDay)
+        max_count = max(1,max(self.records_in_month.values(), default=1))
         for i in range(month_range):
-            date = today.replace(day=1) + datetime.timedelta(days=i)
+            date = self.activeMonDay.replace(day=1) + datetime.timedelta(days=i)
             count = self.records_in_month.get(date, 0)
-            bar = self.lyt_monthBars.itemAt(i).widget()
-            if isinstance(bar, QLabel):
-                bar_width = count*max_barwidth//max_count
-                print(bar_width)
-                if bar_width<0:
-                    bar_width = abs(bar_width)
-                    bar.setObjectName('bar-minus')
+            month_bar = self.lyt_monthBars.itemAt(i).widget()
+            if isinstance(month_bar, QProgressBar):
+                month_bar_width = count*100//max_count
+                month_bar.setMaximum(100)
+                if count < 0:
+                    month_bar_width = abs(month_bar_width)
+                    month_bar.setObjectName('bar-minus')
                 elif count == 0:
-                    bar.setObjectName('bar-zero')
-                elif i==today.day-1:
-                    bar.setObjectName('bar-h')
+                    month_bar.setObjectName('bar-zero')
                 else:
-                    bar.setObjectName('bar')
-                bar_width = max(5,bar_width)
-                bar.setFixedWidth(bar_width)
-            # print(f"Date[{date}] >>>> {count}")
+                    month_bar.setObjectName('bar')
+                month_bar.setValue(max(2,month_bar_width))
+                month_bar.info = date
+                # print(f'month_bar---{date}---{month_bar.value()}/{month_bar.maximum()}, {month_bar.objectName()}')
+                month_bar.style().unpolish(month_bar)
+                month_bar.style().polish(month_bar)
 
     def filted_date(self, mode = 'week'):
-        today = datetime.date.today()
         if mode == 'week':
-            last_monday = today - datetime.timedelta(days=6)
+            last_monday = self.activeWeekDay - datetime.timedelta(days=6)
             records_in_range = {}
             for k in self.records:
-                if k >= last_monday:
+                if k >= last_monday and k <= self.activeWeekDay:
                     records_in_range[k] = self.records[k]
-            # print(records_in_range)
             return records_in_range
         elif mode == 'month':
-            first_of_month = today.replace(day=1)
+            first_of_month = self.activeMonDay.replace(day=1)
+            days_in_m = self.get_current_monthdays(self.activeMonDay)
             records_in_range = {}
             for k in self.records:
-                if k >= first_of_month:
+                if k >= first_of_month and k.day <= days_in_m:
                     records_in_range[k] = self.records[k]
-            # print(records_in_range)
             return records_in_range
         return {}
 
@@ -511,20 +753,15 @@ class MainUI(QWidget):
         last_day_of_current_month = next_month - datetime.timedelta(days=1)
         days_in_month = last_day_of_current_month.day
 
-        print(f"当前月份的天数: {days_in_month}")
+        # print(f"当前月份的天数: {days_in_month}")
         return days_in_month
 
     def update_writing_count(self):
         self.records = self.get_records()
-        current_count = self.get_writing_count()
+        self.current_sum = self.get_writing_count()
         last_date = list(self.records.keys())[-1]
-        # last_date = self.get_datetime(self.records[-1]['date'])
         today = datetime.date.today()
-        # yesterday = self.get_yesterday(today)
-        # if yesterday > last_date:
-        # additional = current_count - int(self.last_record['count'])
-        # print(f"{today}|{last_date}---{additional}")
-        new_row = [str(today),str(current_count)]
+        new_row = [str(today),str(self.current_sum)]
 
         with open(CSV_COUNTER, mode='r', newline='') as file:
             reader = csv.reader(file)
@@ -556,26 +793,65 @@ class MainUI(QWidget):
             if not os.path.exists(f_path): continue
             try:
                 with open(f_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                    clean_content = content.replace('\n','').replace(' ','')
-                    total += len(clean_content)
+                    # content = file.read()
+                    # clean_content = content.replace('\n','').replace(' ','')
+                    # total += len(clean_content)
+                    contents = file.readlines()
+                    for line in contents:
+                        cleanline_arr = line.split('//')
+                        if cleanline_arr is None: continue
+                        if len(cleanline_arr)<1: continue
+                        cleanline = cleanline_arr[0]
+                        cleanline = cleanline.replace('\n','').replace(' ','')
+                        total += len(cleanline)
             except:
                 continue
         return total
 
     def on_floating_button1_clicked(self):
+        print('btn 1: add')
+        presize = self.text_edit.font().pointSizeF()
+        targetSize = int(presize) + 1
+        self.text_edit_size_add(presize, targetSize)
+        afterSize = self.text_edit.font().pointSizeF()
+        print(f'Presize:{presize} --> AfterSize:{afterSize}')
+
+    def text_edit_size_add(self, presize, targetSize):
+        if targetSize > self.font_sizes[1] or targetSize < self.font_sizes[0]:
+            print(f'目标字号超出范围：{targetSize}>>{self.font_sizes}')
+            return
         if self.fixed_visible_lines > 2:
             self.fixed_visible_lines -= 1
             self.adjust_scrollbar()
             self.adjust_line_height()
-        print('Font Size Add!')
+            aftersize = self.text_edit.font().pointSizeF()
+            if int(aftersize) < targetSize:
+                print(f'{aftersize}不足，递归计算{targetSize}')
+                self.text_edit_size_add(presize, targetSize)
+        print(f"最终结果：{aftersize}/{targetSize}")
 
     def on_floating_button2_clicked(self):
-        if self.fixed_visible_lines< 100:
+        print('btn 2: minus')
+        presize = self.text_edit.font().pointSizeF()
+        targetSize = int(presize) - 1
+        self.text_edit_size_minus(presize, targetSize)
+        afterSize = self.text_edit.font().pointSizeF()
+        print(f'Presize:{presize} --> AfterSize:{afterSize}')
+
+    def text_edit_size_minus(self, presize, targetSize):
+        if targetSize > self.font_sizes[1] or targetSize < self.font_sizes[0]:
+            print(f'目标字号超出范围：{targetSize}>>{self.font_sizes}')
+            return
+        if self.fixed_visible_lines < 100:
             self.fixed_visible_lines += 1
             self.adjust_scrollbar()
             self.adjust_line_height()
-        print('Font Size Minus!')
+            aftersize = self.text_edit.font().pointSizeF()
+            if int(aftersize) > targetSize:
+                print(f'{aftersize}不足，递归计算{targetSize}')
+                self.text_edit_size_minus(presize, targetSize)
+        print(f"最终结果：{aftersize}/{targetSize}")
+
 
     def on_floating_button3_clicked(self):
         if len(self.matched_positions) == 0 : return
@@ -630,7 +906,6 @@ class MainUI(QWidget):
                 if block.position()<= pos < block.position() + block.length():
                     self.matched_blocks.append(i+1)
                     break
-        # print(f"Match found in block Num: {self.matched_blocks}")
         # 使用 CSS 样式来保留空格和换行
         html_text = f'<div style="white-space: pre-wrap;">{highlighted_text}</div>'
 
@@ -715,22 +990,6 @@ class MainUI(QWidget):
             print(f"PermissionError: {e}")
             return ''
 
-    # def load_custom_font(self, font_path):
-    #     """加载自定义字体"""
-    #     font_id = QFontDatabase.addApplicationFont(font_path)
-    #     if font_id == -1:
-    #         print(f"Failed to load font from {font_path}")
-    #     else:
-    #         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-    #         self.custom_font_family = font_family
-
-    # def set_fonts(self):
-    #     """设置字体大小"""
-    #     # font = self.text_edit.font()
-    #     # font.setPointSize(size)
-    #     font = QFont(self.custom_font_family)
-    #     self.text_edit.setFont(font)
-
     def set_background_image(self, image_path):
         # 创建一个 QLabel 并设置背景图
         label = QLabel(self)
@@ -749,6 +1008,7 @@ class MainUI(QWidget):
 
     def leaveEvent(self, event):
         self.refresh_mark = True
+        self.info_bannar.setText('')
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -841,7 +1101,6 @@ class MainUI(QWidget):
 
         font = self.text_edit.font()
         fontsize = line_height / self.text_edit.fontMetrics().height() * font.pointSizeF()
-        print(f"fontsize:{fontsize}")
         font.setPointSizeF(fontsize)
         self.text_edit.setFont(font)
 
