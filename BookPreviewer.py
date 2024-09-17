@@ -143,7 +143,7 @@ class MainUI(QWidget):
 
         self.novel_content = ''
         self.header = ["date","count"]
-
+        self.matched_positions = []
         # Create a QVBoxLayout
         layout = QVBoxLayout(self)
         # 📅📊📈📆🗃️📇📱
