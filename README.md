@@ -4,7 +4,7 @@
 BookPreviewer 是一个给PC端作者使用的，用于在使用传统txt记事本写作时预览小说内容的应用程序。
 它允许用户在PC端模拟手机界面，预览自己的TXT文件。
 
-## 安装步骤
+## Build步骤
 	运行builder.py即可
 	或者
 	pyinstaller BookPreviewer.py
