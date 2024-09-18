@@ -1062,7 +1062,7 @@ class MainUI(QWidget):
     def enterEvent(self, event):
         self.RefreshingTxtLoad()
         self.update_writing_count()
-
+        self.update_diagrams()
     # def contextMenuEvent(self, event):
     #     self.refresh_items()
     #     self.reload_novel_from_combo(True)
