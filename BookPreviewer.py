@@ -109,6 +109,15 @@ class SummaryGraph(QWidget):
         if label != '': self.current_label.setText(f"{label}字数")
         self.current_count_label.setText("{:,}".format(sum))
 
+def Custom_today():
+    now = datetime.datetime.now()
+    # 计算今天八点的时间
+    today_eight_am = datetime.datetime(now.year, now.month, now.day, 8, 0, 0)
+    if now < today_eight_am:
+        # 如果当前时间在今天八点之前，则返回昨天的八点
+        today_eight_am -= datetime.timedelta(days=1)
+    return today_eight_am.date()
+
 class MainUI(QWidget):
     def __init__(self):
         super().__init__()
@@ -349,8 +358,8 @@ class MainUI(QWidget):
         self.diagram_page_layout.addWidget(self.diagram_head_widget)
 
     def on_graph_widget_changed(self):
-        self.activeMonDay = datetime.date.today()
-        self.activeWeekDay = datetime.date.today()
+        self.activeMonDay = Custom_today()
+        self.activeWeekDay = Custom_today()
 
         self.refresh_label_week()
         self.refresh_label_month()
@@ -374,7 +383,7 @@ class MainUI(QWidget):
         self.month_widget.setVisible(switch_month)
 
     def on_month_widget_gui(self):
-        self.activeMonDay = datetime.date.today()
+        self.activeMonDay = Custom_today()
         self.month_widget = QWidget()
         self.month_diagram_layout = QVBoxLayout()
         self.month_widget.setLayout(self.month_diagram_layout)
@@ -446,7 +455,7 @@ class MainUI(QWidget):
             currentlbl = (m//3)+1
             if currentlbl == lastm and m!=0: continue
             lastm = currentlbl
-            # offset_date = datetime.date.today() - datetime.timedelta(m)
+            # offset_date = Custom_today() - datetime.timedelta(m)
             lbl_str = str(m+1)
             lbl_dayname = QLabel(lbl_str)
             lbl_dayname.setObjectName('month_day')
@@ -472,7 +481,7 @@ class MainUI(QWidget):
         # print(f"MonthBar count -> End: {self.lyt_monthBars.count()}")
 
     def on_next_month_clicked(self):
-        today = datetime.date.today()
+        today = Custom_today()
         if (self.activeMonDay.replace(day=1)-today.replace(day=1)) >= datetime.timedelta(days=0):
             print("已经是最新了.")
             return
@@ -504,7 +513,7 @@ class MainUI(QWidget):
         return record_start
 
     def on_next_week_clicked(self):
-        if (self.activeWeekDay-datetime.date.today()) >= datetime.timedelta(0):
+        if (self.activeWeekDay-Custom_today()) >= datetime.timedelta(0):
             print("已经是最新了.")
             return
         self.activeWeekDay += datetime.timedelta(days=7)
@@ -520,8 +529,8 @@ class MainUI(QWidget):
         self.update_week_diagram()
 
     def on_week_widget_gui(self):
-        # today = datetime.date.today()
-        self.activeWeekDay = datetime.date.today()
+        # today = Custom_today()
+        self.activeWeekDay = Custom_today()
         self.week_widget = QWidget()
         self.week_diagram_layout = QVBoxLayout()
         self.week_widget.setLayout(self.week_diagram_layout)
@@ -602,11 +611,11 @@ class MainUI(QWidget):
         self.book_summary_widget.setSummary(self.current_sum)
         week_sum = self.get_recently_summaries()
         self.week_summary_widget.setSummary(week_sum)
-        month_sum = self.get_recently_summaries(self.get_current_monthdays(datetime.date.today()))
+        month_sum = self.get_recently_summaries(self.get_current_monthdays(Custom_today()))
         self.month_summary_widget.setSummary(month_sum)
 
     def get_recently_summaries(self, day_length = 7):
-        recently_date = datetime.date.today() - datetime.timedelta(days = day_length)
+        recently_date = Custom_today() - datetime.timedelta(days = day_length)
         pre_sum = 0
         record_list = list(self.records.values())
         for i in range(len(record_list)):
@@ -742,9 +751,9 @@ class MainUI(QWidget):
         return date_counts
     def get_current_monthdays(self, now):
         # 获取当前日期
-        # now = datetime.date.today()
+        # now = Custom_today()
         # 计算下个月的第一天
-        next_month = datetime.date.today()
+        next_month = Custom_today()
         if now.month == 12:
             next_month = datetime.date(now.year + 1, 1, 1)
         else:
@@ -760,7 +769,7 @@ class MainUI(QWidget):
         self.records = self.get_records()
         self.current_sum = self.get_writing_count()
         last_date = list(self.records.keys())[-1]
-        today = datetime.date.today()
+        today = Custom_today()
         new_row = [str(today),str(self.current_sum)]
 
         with open(CSV_COUNTER, mode='r', newline='') as file:
