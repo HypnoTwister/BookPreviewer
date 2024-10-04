@@ -10,7 +10,7 @@
 *#borderblock{
     border: 1px solid #ff09998d;
     border-radius: 6px;
-    background-color: #1509998d;
+    background-color: #0f09998d;
     /* background: red; */
     padding:0px;
 }
@@ -167,22 +167,22 @@ QPushButton#tab {
     /* font-weight: bold; */
     border: 1px solid #09998d;
     border-radius: 4px;
-    background-color: #1509998d;
+    background-color: #0f09998d;
     color: #3f3f3f;
     padding: 4px 18px 4px 18px;
 }
 QPushButton#tab:hover {
     border: 1px solid #09998d;
-    background-color: #4a09998d;
+    background-color: #3a09998d;
 }
 QPushButton#tab:pressed {
     border: 1px solid #09998d;
-    background-color: #4a09998d;
+    background-color: #3a09998d;
 }
 QPushButton#tab:checked {
-    border: 1px solid #09998d;
-    color: #055852;
-    background-color: #4a09998d;
+    border: 1px solid #043b36;
+    color: #043b36;
+    background-color: #9e09998d;
 }
 /* QPushButton Warning */
 QPushButton#Warning {
@@ -295,7 +295,7 @@ QLabel#bar{
     border: 0px;
     border-radius: 2px;
     color: white;
-    background: #4a09998d;
+    background: #0f09998d;
 }
 QLabel#bar:hover{
     border:1px solid #09998d;
@@ -310,7 +310,7 @@ QLabel#bar-h{
     /* border:0px; */
     border-radius: 2px;
     color: white;
-    background: #4a09998d;
+    background: #0f09998d;
 }
 QLabel#bar-h:hover{
     border:1px solid #09998d;
@@ -323,7 +323,7 @@ QLabel#bar-zero{
     border:0px;
     border-radius: 2px;
     color: #3f3f3f;
-    background: #0a636363;
+    background: white;
 }
 QLabel#bar-minus{
     /* font-weight: light; */
@@ -391,7 +391,8 @@ QComboBox QAbstractItemView {
     border: none;
     /* border-radius: 4px; */
     /* padding: 4px; */
-    background-color: #eefaee;
+    /* background-color: #eefaee; */
+    background-color: white;
     color: black;
 }
 
@@ -400,7 +401,7 @@ QProgressBar{
     padding: 0px;
     border: 0px;
     border-radius: 2px;
-    color: gray;
+    color: #043b36;
     background-color: transparent;
 }
 
@@ -409,24 +410,25 @@ QProgressBar::chunk#bar{
     /* font-size: 12px; */
     border: 0px;
     border-radius: 2px;
-    background: #4a09998d;
+    background: #9e09998d;
 }
 QProgressBar::chunk#bar:hover{
-    border:1px solid #09998d;
-    background: #09998d;
+    border:1px solid #fc863d;
+    background: #fc863d;
+    color: white;
 }
-
 QProgressBar::chunk#bar-h{
     /* font-weight: light; */
     /* font-size: 12px; */
     border: 0;
     /* border:0px; */
     border-radius: 2px;
-    background: #4a09998d;
+    background: #9e09998d;
 }
 QProgressBar::chunk#bar-h:hover{
-    border:1px solid #09998d;
-    background: #09998d;
+    border:1px solid #fc863d;
+    background: #fc863d;
+    color: white;
 }
 QProgressBar::chunk#bar-zero{
     /* font-weight: light; */
@@ -434,7 +436,7 @@ QProgressBar::chunk#bar-zero{
     border:0px;
     border-radius: 2px;
     /* color: #3f3f3f; */
-    background: #0a636363;
+    background: #2c3f3f3f;
 }
 /* QProgressBar#bar-minus{
     border: 0px;
@@ -447,10 +449,10 @@ QProgressBar::chunk#bar-minus{
     /* font-size: 12px; */
     border: 0px;
     border-radius: 2px;
-    /* color: white; */
     background: #2c3f3f3f;
 }
 QProgressBar::chunk#bar-minus:hover{
     /* border:1px solid #9a3f3f3f; */
     background: #9a3f3f3f;
+    color: white;
 }

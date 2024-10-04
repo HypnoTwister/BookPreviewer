@@ -634,29 +634,45 @@ class MainUI(QWidget):
         for i in range(7):
             date = today-datetime.timedelta(days=6) + datetime.timedelta(days=i)
             count = self.records_in_week.get(date, 0)
+
             barname = self.lyt_weekBars.itemAt(i).layout().itemAt(0).widget()
             week_bar = self.lyt_weekBars.itemAt(i).layout().itemAt(1).widget()
             if isinstance(barname, QLabel):
                 barname.setText(str(date.day))
                 barname.setFixedWidth(16)
             if isinstance(week_bar, QProgressBar):
-                week_bar_width = count*100//max_count
+                week_bar_width = max(1, count*100//max_count) if count > 0 else 0
                 week_bar.setMaximum(100)
+                week_bar.setTextVisible(True)
+                bar_value = f" {count}"
+
+                font_metrics = QFontMetrics(week_bar.font())
+                string_width = font_metrics.width(bar_value)//2
+                # print(f"date: {date} count: {count} string_width: {string_width}")
+                # print(f'blank width:{font_metrics.width(" ")}')
+
                 if week_bar_width<0:
                     week_bar_width = abs(week_bar_width)
                     week_bar.setObjectName('bar-minus')
                 elif week_bar_width == 0:
                     week_bar.setObjectName('bar-zero')
-                elif i==today.day-1:
-                    week_bar.setObjectName('bar-h')
+                    week_bar.setTextVisible(False)
+                # elif i==today.day-1:
+                #     week_bar.setObjectName('bar-h')
                 else:
                     week_bar.setObjectName('bar')
                 week_bar_width = max(2,week_bar_width)
                 week_bar.info = date
+
+                if week_bar_width < string_width:
+                    offset = math.ceil(week_bar_width/5)+1
+                    # print(f"week_bar_width:{week_bar_width} offset: {offset}")
+                    bar_value = " " * offset + bar_value
+
                 week_bar.setValue(week_bar_width)
+                # week_bar.setValue(string_width)
+
                 week_bar.setFixedWidth(max_barwidth)
-                week_bar.setTextVisible(True)
-                bar_value = f" {count}"
                 week_bar.setFormat(bar_value)
                 week_bar.setAlignment(Qt.AlignmentFlag.AlignVCenter)
                 week_bar.style().unpolish(week_bar)
@@ -905,7 +921,8 @@ class MainUI(QWidget):
 
         # 获取匹配到的位置
         matches = pattern.finditer(text)
-        self.matched_positions = [match.start() for match in matches]
+        self.matched_positions = [0]+[match.start() for match in matches]+[len(text)-1]
+        print(f"matched_positions: {self.matched_positions}")
         # 根据匹配到的位置找到所在的block
         self.matched_blocks = []
         for pos in self.matched_positions:
