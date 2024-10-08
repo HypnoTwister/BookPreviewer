@@ -260,6 +260,13 @@ class MainUI(QWidget):
         layout.addStretch()
         self.setLayout(layout)
 
+    def closeEvent(self, event):
+        print("Application is being forced to close")
+        self.RefreshingTxtLoad()
+        self.update_writing_count()
+        # self.update_diagrams()
+        event.accept()
+
     def on_diagrams_bannar_gui(self):
         self.info_bannar = QLabel('')
         self.info_bannar.setObjectName('info')
