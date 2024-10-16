@@ -27,7 +27,7 @@ ICON_PATH = resource_path("resources/smartphone.png")
 CSV_COUNTER = resource_path('resources/writingcounter.csv')
 
 # BOOK_SHELF = os.path.dirname(os.path.abspath(__file__))
-BOOK_SHELF = r'D:\Documents\Books\Writing'
+BOOK_SHELF = r'C:\Users\zxy00\Work\Writing'
 # RARE_CHS = r'[\u3400-\u4DBF\uF900-\uFAFF\U00020000-\U0002EBEF]'
 COMMON_CHS = r'[\u4E00-\u9FFF\u3400-\u4DBF]'
 NOT_COMMON = rf'[^{PUNCTUATION_STR}{LETTERS}{NUMS}\u4E00-\u9FFF \n]'
