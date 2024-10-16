@@ -11,12 +11,12 @@ __pycache__/
 build/
 develop-eggs/
 
-/dist/BookPreviewer/*
-!/dist/BookPreviewer/_internal
-/dist/BookPreviewer/_internal/*
-!dist/BookPreviewer/_internal/resources
-/dist/BookPreviewer/_internal/resources/*
-!/dist/BookPreviewer/_internal/resources/writingcounter.csv
+# /dist/BookPreviewer/*
+# !/dist/BookPreviewer/_internal
+# /dist/BookPreviewer/_internal/*
+# !dist/BookPreviewer/_internal/resources
+# /dist/BookPreviewer/_internal/resources/*
+# !/dist/BookPreviewer/_internal/resources/writingcounter.csv
 
 downloads/
 eggs/
