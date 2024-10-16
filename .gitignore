@@ -10,8 +10,14 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/*
-!dist/BookPreviewer/_internal/resources/writingcounter.csv
+
+/dist/BookPreviewer/*
+!/dist/BookPreviewer/_internal
+/dist/BookPreviewer/_internal/*
+!dist/BookPreviewer/_internal/resources
+/dist/BookPreviewer/_internal/resources/*
+!/dist/BookPreviewer/_internal/resources/writingcounter.csv
+
 downloads/
 eggs/
 .eggs/
