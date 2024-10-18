@@ -27,7 +27,7 @@ ICON_PATH = resource_path("resources/smartphone.png")
 CSV_COUNTER = resource_path('resources/writingcounter.csv')
 
 # BOOK_SHELF = os.path.dirname(os.path.abspath(__file__))
-BOOK_SHELF = r'C:\Users\zxy00\Work\Writing'
+BOOK_SHELF = r''
 # RARE_CHS = r'[\u3400-\u4DBF\uF900-\uFAFF\U00020000-\U0002EBEF]'
 COMMON_CHS = r'[\u4E00-\u9FFF\u3400-\u4DBF]'
 NOT_COMMON = rf'[^{PUNCTUATION_STR}{LETTERS}{NUMS}\u4E00-\u9FFF \n]'
@@ -124,7 +124,10 @@ class MainUI(QWidget):
         # 设置窗口大小和标题
         self.setWindowTitle("Phone Simulator")
         # self.setGeometry(100, 100, 360, 801)
-        self.main_height = 750
+        screen = QApplication.primaryScreen()
+        screen_rect = screen.availableGeometry()
+        self.main_height = int(screen_rect.height() * 0.5)
+
         self.main_width = int(9.5/20 * self.main_height)
         self.content_width = self.main_width - self.main_width//6
         self.content_height = int(27/32*self.main_height)
@@ -162,6 +165,7 @@ class MainUI(QWidget):
         self.comb_file = QComboBox(self)
         self.collect_files = []
         self.refresh_mark = False
+        self.txt_files = []
         self.refresh_items()
         self.comb_file.setMaximumWidth(self.content_width)
 
