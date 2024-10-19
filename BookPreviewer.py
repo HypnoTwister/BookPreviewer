@@ -191,7 +191,7 @@ class MainUI(QWidget):
         self.txt_files = []
         self.refresh_items()
         # self.comb_file.setMaximumWidth(self.content_width)
-        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {self.fontPixSize-12}px;')
+        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {self.fontPixSize}px;')
 
         self.size_sel = QPushButton(f'X{self.scale}')
         self.size_sel.clicked.connect(self.scale_change)
@@ -1060,7 +1060,7 @@ class MainUI(QWidget):
             self.UpdateCsvData(BOOK_SHELF)
 
     def highlight_text(self):
-        currentFile = self.comb_file.currentText()
+        currentFile = self.comb_file.currentText() + '.txt'
         if currentFile.startswith('Doc_'): return
         # pass
         text = self.text_edit.toPlainText()
@@ -1104,7 +1104,7 @@ class MainUI(QWidget):
 
     def reload_novel_from_combo(self, keep_scroll = False):
         scroll_position = self.text_edit.verticalScrollBar().value()
-        self.novel_content = self.load_novel(self.comb_file.currentText())
+        self.novel_content = self.load_novel(self.comb_file.currentText() + '.txt')
         self.text_edit.setText(self.novel_content)
 
         self.counter.setText(self.get_counter_label())
@@ -1116,7 +1116,7 @@ class MainUI(QWidget):
            print(f"refresh to scroll back! (scroll_position : {scroll_position})")
 
     def refresh_items(self):
-        pre_sel = self.comb_file.currentText()
+        pre_sel = self.comb_file.currentText() + '.txt'
         files = self.get_files_from_dir()
         if files != self.collect_files:
             print("File Changed!!")
@@ -1124,7 +1124,9 @@ class MainUI(QWidget):
             self.txt_files = [f for f in files if not f.startswith('Doc_')]
             self.comb_file.clear()
             for file in files:
-                self.comb_file.addItem(file)
+                filename = ''
+                if '.' in file : filename = file.split('.')[0]
+                if filename != '': self.comb_file.addItem(filename)
             if pre_sel in files:
                 self.comb_file.setCurrentText(pre_sel)
 
