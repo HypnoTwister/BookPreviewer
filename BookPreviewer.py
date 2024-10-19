@@ -15,6 +15,7 @@ def resource_path(relativePath):
         base_path = os.path.abspath('.')
     return os.path.join(base_path, relativePath)
 
+MainUIHeigthInch = 5.91
 
 PUNCTUATION_STR = r'；：\-，。“”‘’？——！《》￥@#%……&*（）|、~·【】'
 LETTERS = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
@@ -126,13 +127,13 @@ class MainUI(QWidget):
         # 设置窗口大小和标题
         self.setWindowTitle("Phone Simulator")
         # self.setGeometry(100, 100, 360, 801)
-        screen = QApplication.primaryScreen()
-        screen_rect = screen.availableGeometry()
-
+        # screen = QApplication.primaryScreen()
+        # screen_rect = screen.availableGeometry()
+        self.update_book_shelf()
         # self.main_height = int(screen_rect.height() * 0.5)
         dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
-        self.main_height = int(dpi*6.36)
-
+        self.scale = float(self.GetPreset('ScaleSize'))
+        self.main_height = int(dpi * MainUIHeigthInch * self.scale)
         self.main_width = int(9.5/20 * self.main_height)
         self.content_width = self.main_width - self.main_width//6
         self.content_height = int(27/32*self.main_height)
@@ -174,7 +175,16 @@ class MainUI(QWidget):
         self.refresh_items()
         self.comb_file.setMaximumWidth(self.content_width)
 
+        self.size_sel = QPushButton(f'X{self.scale}')
+        self.size_sel.clicked.connect(self.scale_change)
+        self.size_sel.setFixedWidth(self.head_btn_size * 2)
+        self.size_sel.setFixedHeight(self.head_btn_size)
+        self.size_sel.setObjectName('square')
+
+        # self.size_sel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         header.addSpacing(self.edge_spacing)
+        # header.addStretch()
+        header.addWidget(self.size_sel)
         header.addWidget(self.comb_file)
         self.btn_open = QPushButton('...')
         self.btn_open.setObjectName('square')
@@ -197,9 +207,9 @@ class MainUI(QWidget):
         header.addWidget(self.btn_tabs)
         header.addWidget(self.btn_close)
         header.addSpacing(self.edge_spacing)
-        headerline.addWidget(QLabel(''))
+        # headerline.addWidget(QLabel(''))
+        headerline.addSpacing(self.edge_spacing)
         headerline.addLayout(header)
-        headerline.addSpacing(2)
         layout.addLayout(headerline)
 
         # --------------------小说内容----------------------
@@ -265,11 +275,21 @@ class MainUI(QWidget):
         layout.addLayout(content)
         # ----------------------End----------------------
 
-        self.update_book_shelf()
-
         self.switch_to_book_content(True)
         layout.addStretch()
         self.setLayout(layout)
+
+    def scale_change(self, event):
+        scalesize = self.scale
+        if (scalesize < 2.0 and scalesize >= 1.0) or scalesize < 0.9:
+            scalesize = self.scale + 0.15
+        elif scalesize >= 0.9 and scalesize < 1.0:
+            scalesize = self.scale + 0.1
+        else: scalesize = 0.45
+        self.scale = scalesize
+        print(f'X{format(self.scale, ".2f")}')
+        self.size_sel.setText(f'X{format(self.scale, ".2f")}')
+        self.UpdatePreset('ScaleSize', f'{format(self.scale, ".2f")}')
 
     def closeEvent(self, event):
         print("Application is being forced to close")
@@ -295,8 +315,7 @@ class MainUI(QWidget):
         directory = os.path.dirname(PRESET_PATH)
         if not os.path.exists(directory): os.makedirs(directory)
         with open(PRESET_PATH, 'w', encoding='utf-8') as file:
-            file.writelines(content)
-            # file.write('\n'.join(content).strip())
+            file.write('\n'.join(content).replace('\n\n','\n'))
 
     def GetPreset(self, mark):
         val = ''
@@ -308,6 +327,7 @@ class MainUI(QWidget):
                     line = content[i]
                     k = line.split(':')[0]
                     if k == mark: val = line.replace(f'{k}:','').replace('\n','')
+        print(f"Load Preset: {val}")
         return val
 
     def on_diagrams_bannar_gui(self):
