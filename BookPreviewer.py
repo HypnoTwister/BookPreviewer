@@ -26,8 +26,10 @@ CUSTOM_FONTS = resource_path("resources/TempFont.ttf")
 ICON_PATH = resource_path("resources/smartphone.png")
 CSV_COUNTER = resource_path('resources/writingcounter.csv')
 
-# BOOK_SHELF = os.path.dirname(os.path.abspath(__file__))
+local_path = os.path.join(os.path.expanduser('~'), 'AppData', 'Local')
+PRESET_PATH = os.path.join(local_path,'BookPreviewer/preset.txt').replace('\\','/')
 BOOK_SHELF = r''
+
 # RARE_CHS = r'[\u3400-\u4DBF\uF900-\uFAFF\U00020000-\U0002EBEF]'
 COMMON_CHS = r'[\u4E00-\u9FFF\u3400-\u4DBF]'
 NOT_COMMON = rf'[^{PUNCTUATION_STR}{LETTERS}{NUMS}\u4E00-\u9FFF \n]'
@@ -126,7 +128,10 @@ class MainUI(QWidget):
         # self.setGeometry(100, 100, 360, 801)
         screen = QApplication.primaryScreen()
         screen_rect = screen.availableGeometry()
-        self.main_height = int(screen_rect.height() * 0.5)
+
+        # self.main_height = int(screen_rect.height() * 0.5)
+        dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
+        self.main_height = int(dpi*6.36)
 
         self.main_width = int(9.5/20 * self.main_height)
         self.content_width = self.main_width - self.main_width//6
@@ -260,6 +265,8 @@ class MainUI(QWidget):
         layout.addLayout(content)
         # ----------------------End----------------------
 
+        self.update_book_shelf()
+
         self.switch_to_book_content(True)
         layout.addStretch()
         self.setLayout(layout)
@@ -270,6 +277,38 @@ class MainUI(QWidget):
         self.update_writing_count()
         # self.update_diagrams()
         event.accept()
+
+    def UpdatePreset(self, mark, val):
+        content = []
+        if os.path.exists(PRESET_PATH):
+            with open(PRESET_PATH, 'r', encoding='utf-8') as infile:
+                content = infile.readlines()
+        newline = f'{mark}:{val}'
+        fileExisted = False
+        for i in range(len(content)):
+            line = content[i]
+            k = line.split(':')[0]
+            if k == mark:
+                content[i] = newline
+                fileExisted = True
+        if not fileExisted: content += [newline]
+        directory = os.path.dirname(PRESET_PATH)
+        if not os.path.exists(directory): os.makedirs(directory)
+        with open(PRESET_PATH, 'w', encoding='utf-8') as file:
+            file.writelines(content)
+            # file.write('\n'.join(content).strip())
+
+    def GetPreset(self, mark):
+        val = ''
+        directory = os.path.dirname(PRESET_PATH)
+        if os.path.exists(directory):
+            with open(PRESET_PATH, 'r', encoding='utf-8') as file:
+                content = file.readlines()
+                for i in range(len(content)):
+                    line = content[i]
+                    k = line.split(':')[0]
+                    if k == mark: val = line.replace(f'{k}:','').replace('\n','')
+        return val
 
     def on_diagrams_bannar_gui(self):
         self.info_bannar = QLabel('')
@@ -911,6 +950,10 @@ class MainUI(QWidget):
         # 设置滚动条位置
         scrollbar.setValue(block_top)
 
+    def update_book_shelf(self):
+        global BOOK_SHELF
+        BOOK_SHELF = self.GetPreset('ShelfPath')
+
     def open_folder(self):
         global BOOK_SHELF
 
@@ -919,6 +962,7 @@ class MainUI(QWidget):
             BOOK_SHELF = folder_path
             self.refresh_items()
             self.reload_novel_from_combo(True)
+            self.UpdatePreset('ShelfPath', folder_path)
 
     def highlight_text(self):
         currentFile = self.comb_file.currentText()
