@@ -132,7 +132,7 @@ class MainUI(QWidget):
         self.update_book_shelf()
         # self.main_height = int(screen_rect.height() * 0.5)
         dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
-        self.scale = float(self.GetPreset('ScaleSize'))
+        self.scale = float(self.GetPreset('ScaleSize','1.0'))
         self.main_height = int(dpi * MainUIHeigthInch * self.scale)
         self.main_width = int(9.5/20 * self.main_height)
         self.content_width = self.main_width - self.main_width//6
@@ -317,7 +317,7 @@ class MainUI(QWidget):
         with open(PRESET_PATH, 'w', encoding='utf-8') as file:
             file.write('\n'.join(content).replace('\n\n','\n'))
 
-    def GetPreset(self, mark):
+    def GetPreset(self, mark, default = ''):
         val = ''
         directory = os.path.dirname(PRESET_PATH)
         if os.path.exists(directory):
@@ -328,6 +328,7 @@ class MainUI(QWidget):
                     k = line.split(':')[0]
                     if k == mark: val = line.replace(f'{k}:','').replace('\n','')
         print(f"Load Preset: {val}")
+        if val == '': return default
         return val
 
     def on_diagrams_bannar_gui(self):
