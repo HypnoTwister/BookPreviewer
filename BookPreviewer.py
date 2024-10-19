@@ -45,7 +45,7 @@ def load_custom_font():
     else:
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
         return font_family
-    return '微软雅黑'
+    return '等线'
 
 class CustomHLine(QLabel):
     def __init__(self, parent=None):
@@ -128,13 +128,21 @@ class MainUI(QWidget):
         super().__init__()
         # 设置窗口大小和标题
         self.setWindowTitle("Phone Simulator")
-        # self.setGeometry(100, 100, 360, 801)
         # screen = QApplication.primaryScreen()
         # screen_rect = screen.availableGeometry()
+        self.scale = float(self.GetPreset('ScaleSize','1.0'))
+
+        fontfamily = load_custom_font()
+        GFont = QFont(fontfamily)
+        # GFont = QFont('微软雅黑')
+        dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
+        fontPointSize = MainUIHeigthInch * self.scale * 1.25
+        GFont.setPointSizeF(fontPointSize)
+        app.setFont(GFont)
+
         self.update_book_shelf()
         # self.main_height = int(screen_rect.height() * 0.5)
-        dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
-        self.scale = float(self.GetPreset('ScaleSize','1.0'))
+
         self.main_height = int(dpi * MainUIHeigthInch * self.scale)
         self.main_width = int(9.5/20 * self.main_height)
         self.content_width = self.main_width - self.main_width//6
@@ -176,12 +184,14 @@ class MainUI(QWidget):
         self.txt_files = []
         self.refresh_items()
         self.comb_file.setMaximumWidth(self.content_width)
+        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {int(fontPointSize * dpi / 72)}px;')
 
         self.size_sel = QPushButton(f'X{self.scale}')
         self.size_sel.clicked.connect(self.scale_change)
         self.size_sel.setFixedWidth(self.head_btn_size * 2)
         self.size_sel.setFixedHeight(self.head_btn_size)
         self.size_sel.setObjectName('square')
+        self.size_sel.setFont(GFont)
 
         # self.size_sel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         header.addSpacing(self.edge_spacing)
@@ -192,15 +202,19 @@ class MainUI(QWidget):
         self.btn_open.setObjectName('square')
         self.btn_open.setFixedWidth(self.head_btn_size)
         self.btn_open.setFixedHeight(self.head_btn_size)
+        self.btn_open.setFont(GFont)
         self.btn_open.clicked.connect(self.open_folder)
+
         self.btn_tabs = QPushButton('A')
         self.btn_tabs.setObjectName('ico')
         self.btn_tabs.setFixedWidth(self.head_btn_size)
         self.btn_tabs.setFixedHeight(self.head_btn_size)
+        self.btn_tabs.setFont(GFont)
         self.btn_tabs.clicked.connect(self.tab_switching)
 
         self.btn_close = QPushButton('✕')
         self.btn_close.setObjectName('Warning')
+        self.btn_close.setFont(GFont)
         self.btn_close.clicked.connect(QApplication.instance().quit)
         self.btn_close.setFixedWidth(self.head_btn_size)
         self.btn_close.setFixedHeight(self.head_btn_size)
@@ -1315,14 +1329,12 @@ QSS_PATH = 'resources/style.qss'
 if __name__ == "__main__":
     # from PyQt5.QtWidgets import QApplication
     # import sys
+    # global dpi
     style_sheet = QSSLoader.read_qss_file(QSS_PATH)
     app = QApplication(sys.argv)
     icon =  QIcon(ICON_PATH)
     app.setWindowIcon(icon)
-    GFont = QFont(load_custom_font())
-    # GFont = QFont('微软雅黑')
-    GFont.setPointSizeF(8)
-    app.setFont(GFont)
+
     window = MainUI()
     window.setStyleSheet(style_sheet)
     window.setWindowIcon(icon)

@@ -90,7 +90,7 @@ QPushButton#slim:checked {
 
 /* QPushButton square */
 QPushButton#square {
-    font-size: 12px;
+    /* font-size: 12px; */
     border: 1px solid darkgray;
     border-radius: 4px;
     background-color: transparent;
@@ -138,7 +138,7 @@ QPushButton#next:checked {
 
 /* QPushButton ico */
 QPushButton#ico {
-    font-size: 18px;
+    /* font-size: 18px; */
     /* font-weight: bold; */
     border: 1px solid darkgray;
     border-radius: 4px;
@@ -186,7 +186,7 @@ QPushButton#tab:checked {
 }
 /* QPushButton Warning */
 QPushButton#Warning {
-    font-size: 12px;
+    /* font-size: 12px; */
     border: 1px solid #000000;
     border-radius: 4px;
     background-color: #fc3d49;
@@ -382,7 +382,7 @@ QComboBox {
     outline: none;
     /* border-radius: 4px; */
     padding: 4px;
-    font-size: 14px;
+    /* font-size: 14px; */
     /* margin: 10px 10px 10px 10px; */
     background-color: transparent;
     color: black;
