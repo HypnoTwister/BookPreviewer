@@ -695,7 +695,10 @@ class MainUI(QWidget):
         self.update_summary_diagram()
 
     def update_summary_diagram(self):
-        self.today_summary_widget.setSummary(list(self.records.values())[-1])
+        recordlist = list(self.records.values())
+        today_sum = 0
+        if recordlist != []: today_sum = recordlist[-1]
+        self.today_summary_widget.setSummary(today_sum)
         self.book_summary_widget.setSummary(self.current_sum)
         week_sum = self.get_recently_summaries()
         self.week_summary_widget.setSummary(week_sum)
@@ -840,6 +843,7 @@ class MainUI(QWidget):
 
     def get_records(self):
         date_counts = {}
+        if CSV_COUNTER == "" : return date_counts
         with open(CSV_COUNTER, mode='r', newline='') as file:
             reader = csv.reader(file)
             readerlist = list(reader)
@@ -880,6 +884,7 @@ class MainUI(QWidget):
         today = Custom_today()
         new_row = [str(today),str(self.current_sum)]
 
+        if CSV_COUNTER == "": return
         with open(CSV_COUNTER, mode='r', newline='') as file:
             reader = csv.reader(file)
             rows = [line for line in list(reader) if line != []]
