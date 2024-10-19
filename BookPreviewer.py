@@ -322,14 +322,20 @@ class MainUI(QWidget):
     def GetPreset(self, mark, default = ''):
         val = ''
         directory = os.path.dirname(PRESET_PATH)
+        if not os.path.exists(PRESET_PATH):
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            with open(PRESET_PATH, 'w', encoding='utf-8') as file:
+                file.write('')
         if os.path.exists(directory):
             with open(PRESET_PATH, 'r', encoding='utf-8') as file:
                 content = file.readlines()
                 for i in range(len(content)):
                     line = content[i]
-                    k = line.split(':')[0]
+                    k = ''
+                    if ':' in line: k = line.split(':')[0]
                     if k == mark: val = line.replace(f'{k}:','').replace('\n','')
-        print(f"Load Preset: {val}")
+        # print(f"Load Preset: {val}")
         if val == '': return default
         return val
 
