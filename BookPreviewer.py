@@ -110,7 +110,7 @@ class SummaryGraph(QWidget):
         lfont = self.current_label.font()
         lfont.setPixelSize(fSize)
         self.current_label.setFont(lfont)
-        lfont.setPixelSize(fSize + 6)
+        lfont.setPixelSize(fSize + 12)
         self.current_count_label.setFont(lfont)
 
         # self.current_count_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
@@ -140,12 +140,12 @@ class MainUI(QWidget):
         self.scale = float(self.GetPreset('ScaleSize','1.0'))
 
         fontfamily = load_custom_font()
-        GFont = QFont(fontfamily)
+        self.GFont = QFont(fontfamily)
         # GFont = QFont('微软雅黑')
         dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
         self.fontPointSize = MainUIHeigthInch * self.scale * dpi / 80
-        GFont.setPointSizeF(self.fontPointSize)
-        app.setFont(GFont)
+        self.GFont.setPointSizeF(self.fontPointSize)
+        app.setFont(self.GFont)
         self.fontPixSize = int(self.fontPointSize * dpi / 72)
         self.update_book_shelf()
         # self.main_height = int(screen_rect.height() * 0.5)
@@ -190,12 +190,12 @@ class MainUI(QWidget):
         self.refresh_mark = False
         self.txt_files = []
         self.refresh_items()
-        self.comb_file.setMaximumWidth(self.content_width)
-        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {self.fontPixSize}px;')
+        # self.comb_file.setMaximumWidth(self.content_width)
+        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {self.fontPixSize-12}px;')
 
         self.size_sel = QPushButton(f'X{self.scale}')
         self.size_sel.clicked.connect(self.scale_change)
-        self.size_sel.setFixedWidth(int(self.fontPointSize * dpi / 18))
+        self.size_sel.setFixedWidth(int(self.fontPointSize * dpi / 24))
         self.size_sel.setFixedHeight(self.head_btn_size)
         self.size_sel.setObjectName('square')
         self.size_sel.setStyleSheet(f'font-family: {fontfamily}; font-size: {self.fontPixSize}px; padding: 0px;')
@@ -209,19 +209,19 @@ class MainUI(QWidget):
         self.btn_open.setObjectName('square')
         self.btn_open.setFixedWidth(self.head_btn_size)
         self.btn_open.setFixedHeight(self.head_btn_size)
-        self.btn_open.setFont(GFont)
+        self.btn_open.setFont(self.GFont)
         self.btn_open.clicked.connect(self.open_folder)
 
         self.btn_tabs = QPushButton('A')
         self.btn_tabs.setObjectName('ico')
         self.btn_tabs.setFixedWidth(self.head_btn_size)
         self.btn_tabs.setFixedHeight(self.head_btn_size)
-        self.btn_tabs.setFont(GFont)
+        self.btn_tabs.setFont(self.GFont)
         self.btn_tabs.clicked.connect(self.tab_switching)
 
         self.btn_close = QPushButton('✕')
         self.btn_close.setObjectName('Warning')
-        self.btn_close.setFont(GFont)
+        self.btn_close.setFont(self.GFont)
         self.btn_close.clicked.connect(QApplication.instance().quit)
         self.btn_close.setFixedWidth(self.head_btn_size)
         self.btn_close.setFixedHeight(self.head_btn_size)
@@ -420,10 +420,10 @@ class MainUI(QWidget):
 
     def on_today_widget_gui(self):
         self.update_writing_count()
-        self.today_summary_widget = SummaryGraph('今日', fSize = int(self.fontPixSize*1.5))
-        self.book_summary_widget = SummaryGraph('全本', fSize = int(self.fontPixSize*1.5))
-        self.week_summary_widget = SummaryGraph('本周', fSize = int(self.fontPixSize*1.5))
-        self.month_summary_widget = SummaryGraph('本月', fSize = int(self.fontPixSize*1.5))
+        self.today_summary_widget = SummaryGraph('今日', fSize = int(self.fontPixSize))
+        self.book_summary_widget = SummaryGraph('全本', fSize = int(self.fontPixSize))
+        self.week_summary_widget = SummaryGraph('本周', fSize = int(self.fontPixSize))
+        self.month_summary_widget = SummaryGraph('本月', fSize = int(self.fontPixSize))
         self.summaries = QVBoxLayout()
         self.summaries.addWidget(self.today_summary_widget)
         self.summaries.addWidget(self.book_summary_widget)
@@ -587,7 +587,11 @@ class MainUI(QWidget):
             lbl_dayname = QLabel(lbl_str)
             lbl_dayname.setObjectName('month_day')
             lbl_dayname.setAlignment(Qt.AlignTop)
-            lbl_dayname.setFixedHeight(28)
+            # lbl_dayname.setFixedHeight(28)
+            lbl_font = self.GFont
+            lbl_font.setPixelSize(self.fontPixSize)
+            lbl_dayname.setFont(lbl_font)
+
             self.month_list.addWidget(lbl_dayname)
             # print(f"Add to month list: {lbl_dayname.text()}")
         # self.month_list.addStretch()
