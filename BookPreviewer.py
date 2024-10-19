@@ -25,7 +25,8 @@ BACKGROUND_PNG = resource_path("resources/background.png")
 CUSTOM_FONTS = resource_path("resources/TempFont.ttf")
 # ICON_PATH = resource_path("resources/book.ico")
 ICON_PATH = resource_path("resources/smartphone.png")
-CSV_COUNTER = resource_path('resources/writingcounter.csv')
+# CSV_COUNTER = resource_path('resources/writingcounter.csv')
+CSV_COUNTER = ''
 
 local_path = os.path.join(os.path.expanduser('~'), 'AppData', 'Local')
 PRESET_PATH = os.path.join(local_path,'BookPreviewer/preset.txt').replace('\\','/')
@@ -112,13 +113,14 @@ class SummaryGraph(QWidget):
         if label != '': self.current_label.setText(f"{label}字数")
         self.current_count_label.setText("{:,}".format(sum))
 
-def Custom_today():
+def Custom_today(timeshift = 0):
     now = datetime.datetime.now()
     # 计算今天八点的时间
     today_eight_am = datetime.datetime(now.year, now.month, now.day, 8, 0, 0)
     if now < today_eight_am:
         # 如果当前时间在今天八点之前，则返回昨天的八点
         today_eight_am -= datetime.timedelta(days=1)
+    if timeshift!=0: today_eight_am += datetime.timedelta(days=timeshift)
     return today_eight_am.date()
 
 class MainUI(QWidget):
@@ -330,6 +332,21 @@ class MainUI(QWidget):
         print(f"Load Preset: {val}")
         if val == '': return default
         return val
+
+    def UpdateCsvData(self, book_shelf):
+        if book_shelf == '': return
+        global CSV_COUNTER
+        CSV_COUNTER = os.path.join(book_shelf,'data/writingcounter.csv').replace('\\','/')
+        if not os.path.exists(CSV_COUNTER):
+            csv_dir = os.path.dirname(CSV_COUNTER)
+            if not os.path.exists(csv_dir):
+                os.makedirs(csv_dir)
+            with open(CSV_COUNTER, mode='w', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                day = Custom_today(-1)
+                raw_data = [[str(day), '0']]
+                print(f"/////{raw_data}")
+                writer.writerows(raw_data)
 
     def on_diagrams_bannar_gui(self):
         self.info_bannar = QLabel('')
@@ -829,11 +846,16 @@ class MainUI(QWidget):
             for i in range(len(readerlist)):
             # for row in reader:
                 row = readerlist[i]
+                # print(f'debug:{row}')
+                if row == []: continue
                 date_str= row[0]
                 count = row[1]
                 date = self.get_datetime(date_str)
                 added = int(count)
-                if i >0 : added = added - int(readerlist[i-1][1])
+                if i >0 :
+                    temp = readerlist[i-1]
+                    if temp == []: continue
+                    added = added - int(temp[1])
                 date_counts[date] = added
         return date_counts
     def get_current_monthdays(self, now):
@@ -855,17 +877,17 @@ class MainUI(QWidget):
     def update_writing_count(self):
         self.records = self.get_records()
         self.current_sum = self.get_writing_count()
-        last_date = list(self.records.keys())[-1]
         today = Custom_today()
         new_row = [str(today),str(self.current_sum)]
 
         with open(CSV_COUNTER, mode='r', newline='') as file:
             reader = csv.reader(file)
-            rows = list(reader)
+            rows = [line for line in list(reader) if line != []]
 
         # 修改最后一行或追加新行
+        last_date = list(self.records.keys())[-1]
         if today != last_date:
-            rows.append(new_row)
+            if new_row != []: rows.append(new_row)
         else:
             rows[-1] = new_row
 
@@ -974,16 +996,17 @@ class MainUI(QWidget):
     def update_book_shelf(self):
         global BOOK_SHELF
         BOOK_SHELF = self.GetPreset('ShelfPath')
+        self.UpdateCsvData(BOOK_SHELF)
 
     def open_folder(self):
         global BOOK_SHELF
-
         folder_path = QFileDialog.getExistingDirectory(self, "选择文件夹")
         if folder_path:
             BOOK_SHELF = folder_path
             self.refresh_items()
             self.reload_novel_from_combo(True)
             self.UpdatePreset('ShelfPath', folder_path)
+            self.UpdateCsvData(BOOK_SHELF)
 
     def highlight_text(self):
         currentFile = self.comb_file.currentText()
