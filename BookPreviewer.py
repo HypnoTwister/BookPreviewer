@@ -96,7 +96,7 @@ class ClickableProgressBar(QProgressBar):
         super().enterEvent(event)
 
 class SummaryGraph(QWidget):
-    def __init__(self, label, sum = 0):
+    def __init__(self, label, sum = 0, fSize = 12):
         super().__init__()
         self.sum_layout = QVBoxLayout(self)
         self.current_label = QLabel(f"{label}字数")
@@ -106,6 +106,13 @@ class SummaryGraph(QWidget):
         self.sum_layout.addWidget(self.current_count_label)
         self.current_label.setObjectName('SubGraph')
         self.current_count_label.setObjectName('H1')
+
+        lfont = self.current_label.font()
+        lfont.setPixelSize(fSize)
+        self.current_label.setFont(lfont)
+        lfont.setPixelSize(fSize + 6)
+        self.current_count_label.setFont(lfont)
+
         # self.current_count_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.current_count_label.setContentsMargins(30,0,0,0)
 
@@ -136,10 +143,10 @@ class MainUI(QWidget):
         GFont = QFont(fontfamily)
         # GFont = QFont('微软雅黑')
         dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
-        fontPointSize = MainUIHeigthInch * self.scale * 1.25
-        GFont.setPointSizeF(fontPointSize)
+        self.fontPointSize = MainUIHeigthInch * self.scale * dpi / 80
+        GFont.setPointSizeF(self.fontPointSize)
         app.setFont(GFont)
-
+        self.fontPixSize = int(self.fontPointSize * dpi / 72)
         self.update_book_shelf()
         # self.main_height = int(screen_rect.height() * 0.5)
 
@@ -184,14 +191,14 @@ class MainUI(QWidget):
         self.txt_files = []
         self.refresh_items()
         self.comb_file.setMaximumWidth(self.content_width)
-        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {int(fontPointSize * dpi / 72)}px;')
+        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {self.fontPixSize}px;')
 
         self.size_sel = QPushButton(f'X{self.scale}')
         self.size_sel.clicked.connect(self.scale_change)
-        self.size_sel.setFixedWidth(self.head_btn_size * 2)
+        self.size_sel.setFixedWidth(int(self.fontPointSize * dpi / 18))
         self.size_sel.setFixedHeight(self.head_btn_size)
         self.size_sel.setObjectName('square')
-        self.size_sel.setFont(GFont)
+        self.size_sel.setStyleSheet(f'font-family: {fontfamily}; font-size: {self.fontPixSize}px; padding: 0px;')
 
         # self.size_sel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         header.addSpacing(self.edge_spacing)
@@ -285,9 +292,11 @@ class MainUI(QWidget):
         self.on_diagrams_header_gui()
         self.on_diagrams_bannar_gui()
         self.on_diagrams_page_gui()
-        content.addStretch()
+        # content.addStretch()
+        content.addSpacing(self.edge_spacing)
         content.addLayout(self.diagram_page_layout)
-        content.addStretch()
+        content.addSpacing(self.edge_spacing)
+        # content.addStretch()
         layout.addLayout(content)
         # ----------------------End----------------------
 
@@ -411,17 +420,19 @@ class MainUI(QWidget):
 
     def on_today_widget_gui(self):
         self.update_writing_count()
-        self.today_summary_widget = SummaryGraph('今日')
-        self.book_summary_widget = SummaryGraph('全本')
-        self.week_summary_widget = SummaryGraph('本周')
-        self.month_summary_widget = SummaryGraph('本月')
+        self.today_summary_widget = SummaryGraph('今日', fSize = int(self.fontPixSize*1.5))
+        self.book_summary_widget = SummaryGraph('全本', fSize = int(self.fontPixSize*1.5))
+        self.week_summary_widget = SummaryGraph('本周', fSize = int(self.fontPixSize*1.5))
+        self.month_summary_widget = SummaryGraph('本月', fSize = int(self.fontPixSize*1.5))
         self.summaries = QVBoxLayout()
         self.summaries.addWidget(self.today_summary_widget)
         self.summaries.addWidget(self.book_summary_widget)
         self.summaries.addWidget(self.week_summary_widget)
         self.summaries.addWidget(self.month_summary_widget)
-        self.diagram_page_layout.addLayout(self.summaries)
 
+        # self.diagram_page_layout.addStretch()
+        self.diagram_page_layout.addLayout(self.summaries)
+        # self.diagram_page_layout.addStretch()
 
     def on_diagrams_header_gui(self):
         # self.diagram_head = QHBoxLayout()
@@ -430,13 +441,13 @@ class MainUI(QWidget):
         self.diagram_head = QHBoxLayout(self.diagram_head_widget)
 
         tab_btn_0 = QPushButton(' 统计 ')
-        tab_btn_0.setFixedWidth((self.content_width-18)//3)
+        # tab_btn_0.setFixedWidth((self.content_width-18)//3)
 
         tab_btn_1 = QPushButton('周视图')
-        tab_btn_1.setFixedWidth((self.content_width-18)//3)
+        # tab_btn_1.setFixedWidth((self.content_width-18)//3)
 
         tab_btn_2 = QPushButton('月视图')
-        tab_btn_2.setFixedWidth((self.content_width-18)//3)
+        # tab_btn_2.setFixedWidth((self.content_width-18)//3)
 
         tab_btn_0.setObjectName('tab')
         tab_btn_1.setObjectName('tab')
@@ -462,8 +473,13 @@ class MainUI(QWidget):
         self.diagram_head.addWidget(tab_btn_1)
         self.diagram_head.addWidget(tab_btn_2)
         self.diagram_head.setContentsMargins(0,0,0,0)
+        spacing = self.edge_spacing-15
+        print(f">>>>>>>>{spacing}")
         # self.diagram_head.addStretch()
+
+        # self.diagram_page_layout.addStretch()
         self.diagram_page_layout.addWidget(self.diagram_head_widget)
+        # self.diagram_page_layout.addStretch()
 
     def on_graph_widget_changed(self):
         self.activeMonDay = Custom_today()
@@ -537,7 +553,10 @@ class MainUI(QWidget):
         self.month_diagram_layout.addLayout(month_header)
         self.month_diagram_layout.addWidget(CustomHLine())
         self.month_diagram_layout.addLayout(self.month_graph)
+
+        # self.diagram_page_layout.addStretch()
         self.diagram_page_layout.addWidget(self.month_widget)
+        # self.diagram_page_layout.addStretch()
 
     def build_monthly_data(self):
         for i in reversed(range(self.month_list.count())):
@@ -677,7 +696,10 @@ class MainUI(QWidget):
         self.week_diagram_layout.addLayout(week_header)
         self.week_diagram_layout.addWidget(CustomHLine())
         self.week_diagram_layout.addLayout(self.lyt_weekBars)
+
+        # self.diagram_page_layout.addStretch()
         self.diagram_page_layout.addWidget(self.week_widget)
+        # self.diagram_page_layout.addStretch()
 
     def refresh_label_week(self):
         weekfrom = self.activeWeekDay-datetime.timedelta(days=6)
@@ -750,7 +772,7 @@ class MainUI(QWidget):
             week_bar = self.lyt_weekBars.itemAt(i).layout().itemAt(1).widget()
             if isinstance(barname, QLabel):
                 barname.setText(str(date.day))
-                barname.setFixedWidth(16)
+                barname.setFixedWidth(self.fontPixSize*2)
             if isinstance(week_bar, QProgressBar):
                 week_bar_width = max(1, count*100//max_count) if count > 0 else 0
                 week_bar.setMaximum(100)

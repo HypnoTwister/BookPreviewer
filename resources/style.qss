@@ -29,7 +29,7 @@ QWidget#diagram_head{
 
 /* QPushButton H1 */
 QPushButton#H1 {
-    font-size: 12px;
+    /* font-size: 12px; */
     border: none;
     border-radius: 4px;
     background-color: #005fba;
@@ -49,7 +49,7 @@ QPushButton#H1:checked {
 
 /* QPushButton H2 */
 QPushButton#H2 {
-    font-size: 12px;
+    /* font-size: 12px; */
     border: none;
     border-radius: 4px;
     background-color: #dedede;
@@ -69,7 +69,7 @@ QPushButton#H2:checked {
 
 /* QPushButton slim */
 QPushButton#slim {
-    font-size: 10px;
+    /* font-size: 10px; */
     border: none;
     border-radius: 4px;
     background-color: #dedede;
@@ -114,7 +114,7 @@ QPushButton#square:checked {
 
 /* QPushButton next */
 QPushButton#next {
-    font-size: 16px;
+    /* font-size: 16px; */
     border: 1px solid darkgray;
     border-radius: 4px;
     background-color: transparent;
@@ -163,13 +163,13 @@ QPushButton#ico:checked {
 
 /* QPushButton tab */
 QPushButton#tab {
-    font-size: 18px;
+    /* font-size: 18px; */
     /* font-weight: bold; */
     border: 1px solid #09998d;
     border-radius: 4px;
     background-color: #0f09998d;
     color: #3f3f3f;
-    padding: 4px 18px 4px 18px;
+    padding: 4px;
 }
 QPushButton#tab:hover {
     border: 1px solid #09998d;
@@ -225,7 +225,7 @@ QPushButton#sidebar:checked {
 }
 
 QLabel#info{
-    font-size: 14px;
+    /* font-size: 14px; */
     padding: 2px;
     color: #3f3f3f;
     background: transparent;
@@ -233,9 +233,9 @@ QLabel#info{
 
 /* QLabel */
 QLabel#H1{
-    font-family: 等线;
+    /* font-family: 等线; */
     font-weight: bold;
-    font-size: 36px;
+    /* font-size: 36px; */
     padding: 0px;
     border: none;
     color: #3f3f3f;
@@ -243,7 +243,7 @@ QLabel#H1{
 /* QLabel */
 QLabel#HighLight{
     /* font-weight: light; */
-    font-size: 12px;
+    /* font-size: 12px; */
     padding: 0px;
     border: none;
     color: #005fba;
@@ -251,14 +251,14 @@ QLabel#HighLight{
 /* QLabel */
 QLabel#HighLight_Core{
     /* font-weight: light; */
-    font-size: 12px;
+    /* font-size: 12px; */
     padding: 0px;
     border: none;
     color: #fc3d49;
 }
 QLabel#Graph{
     /* font-weight: bold; */
-    font-size: 20px;
+    /* font-size: 20px; */
     padding: 4px;
     border: 0px;
     /* border-radius: 4px; */
@@ -267,14 +267,14 @@ QLabel#Graph{
 }
 QLabel#HeaderGraph{
     /* font-weight: bold; */
-    font-size: 20px;
+    /* font-size: 20px; */
     /* border-bottom: 1px solid #09998d; */
     /* border-radius: 4px; */
     color: #3f3f3f;
     background: transparent;
 }
 QLabel#Hline{
-    font-size:1px;
+    /* font-size:1px; */
     padding: 0px;
     border-bottom: 1px solid #09998d;
     /* color:transparent; */
@@ -282,7 +282,7 @@ QLabel#Hline{
 }
 QLabel#SubGraph{
     /* font-weight: light; */
-    font-size: 14px;
+    /* font-size: 14px; */
     padding: 0px;
     border: 0px;
     color: #3f3f3f;
@@ -290,7 +290,7 @@ QLabel#SubGraph{
 }
 QLabel#bar{
     /* font-weight: light; */
-    font-size: 12px;
+    /* font-size: 12px; */
     padding: 4px;
     border: 0px;
     border-radius: 2px;
@@ -304,7 +304,7 @@ QLabel#bar:hover{
 
 QLabel#bar-h{
     /* font-weight: light; */
-    font-size: 12px;
+    /* font-size: 12px; */
     padding: 4px;
     border: 0;
     /* border:0px; */
@@ -318,7 +318,7 @@ QLabel#bar-h:hover{
 }
 QLabel#bar-zero{
     /* font-weight: light; */
-    font-size: 12px;
+    /* font-size: 12px; */
     padding: 4px;
     border:0px;
     border-radius: 2px;
@@ -327,7 +327,7 @@ QLabel#bar-zero{
 }
 QLabel#bar-minus{
     /* font-weight: light; */
-    font-size: 12px;
+    /* font-size: 12px; */
     padding: 4px;
     /* border: 1px solid #2c3f3f3f; */
     border:0px;
@@ -340,7 +340,7 @@ QLabel#bar-minus:hover{
 }
 
 QLabel#month_day{
-    font-size: 12px;
+    /* font-size: 12px; */
     padding: 0px;
     color: #3f3f3f;
     background: transparent;
@@ -351,7 +351,7 @@ QLabel#month_day{
 /* QLineEdit */
 QLineEdit#H1{
     border: none;
-    font-size: 12px;
+    /* font-size: 12px; */
     background-color:white;
     border-radius: 4px;
     padding: 4px;
@@ -362,7 +362,7 @@ QLineEdit#H1{
 
 QLineEdit#H2{
     border: none;
-    font-size: 12px;
+    /* font-size: 12px; */
     background-color: #dedede;
     border-radius: 4px;
     padding: 4px;
@@ -397,7 +397,7 @@ QComboBox QAbstractItemView {
 }
 
 QProgressBar{
-    font-size: 14px;
+    /* font-size: 14px; */
     padding: 0px;
     border: 0px;
     border-radius: 2px;
