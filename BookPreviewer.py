@@ -191,7 +191,7 @@ class MainUI(QWidget):
         self.txt_files = []
         self.refresh_items()
         # self.comb_file.setMaximumWidth(self.content_width)
-        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {self.fontPixSize}px;')
+        self.comb_file.setStyleSheet(f'font-family: {fontfamily}; font-size: {int(MainUIHeigthInch * self.scale * dpi * dpi/(96*96))}px;')
 
         self.size_sel = QPushButton(f'X{self.scale}')
         self.size_sel.clicked.connect(self.scale_change)
