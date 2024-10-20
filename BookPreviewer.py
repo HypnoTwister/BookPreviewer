@@ -16,6 +16,7 @@ def resource_path(relativePath):
     return os.path.join(base_path, relativePath)
 
 MainUIHeigthInch = 5.91
+dpi = 72
 
 PUNCTUATION_STR = r'；：\-，。“”‘’？——！《》￥@#%……&*（）|、~·【】'
 LETTERS = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
@@ -142,6 +143,7 @@ class MainUI(QWidget):
         fontfamily = load_custom_font()
         self.GFont = QFont(fontfamily)
         # GFont = QFont('微软雅黑')
+        global dpi
         dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
         self.fontPointSize = MainUIHeigthInch * self.scale * dpi / 80
         self.GFont.setPointSizeF(self.fontPointSize)
@@ -152,7 +154,7 @@ class MainUI(QWidget):
 
         self.main_height = int(dpi * MainUIHeigthInch * self.scale)
         self.main_width = int(9.5/20 * self.main_height)
-        self.content_width = self.main_width - self.main_width//6
+        self.content_width = int(0.8*self.main_width)
         self.content_height = int(27/32*self.main_height)
         self.edge_spacing = self.main_height//40
         self.head_btn_size = self.main_height//32
@@ -254,6 +256,8 @@ class MainUI(QWidget):
         self.counter.setContentsMargins(self.edge_spacing,0,0,0)
         self.block_pos=QLabel(f'当前: {self.text_edit.currentBlock}')
         self.block_pos.setContentsMargins(0,0,self.edge_spacing,0)
+        self.resize_footer_fonts()
+
         self.text_edit.logger = self.block_pos
         footer.addWidget(self.counter)
         footer.addWidget(self.block_pos)
@@ -303,6 +307,17 @@ class MainUI(QWidget):
         self.switch_to_book_content(True)
         layout.addStretch()
         self.setLayout(layout)
+
+    def resize_footer_fonts(self, first=True):
+        footerFont = self.counter.font()
+        if first: self.footerMetrics = QFontMetrics(footerFont)
+        counter_width = self.footerMetrics.width(self.counter.text())
+        pos_width = self.footerMetrics.width(self.block_pos.text())
+        footfactor = (counter_width + pos_width)/self.content_width
+        ptFooter = self.fontPointSize/ footfactor
+        footerFont.setPointSizeF(ptFooter)
+        self.counter.setFont(footerFont)
+        self.block_pos.setFont(footerFont)
 
     def scale_change(self, event):
         scalesize = self.scale
@@ -1109,7 +1124,7 @@ class MainUI(QWidget):
 
         self.counter.setText(self.get_counter_label())
         self.highlight_text()
-
+        self.resize_footer_fonts(False)
         if keep_scroll:
             # 恢复滚动条位置
            self.text_edit.verticalScrollBar().setValue(scroll_position)
