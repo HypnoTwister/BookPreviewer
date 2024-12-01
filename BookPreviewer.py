@@ -429,9 +429,25 @@ class MainUI(QWidget):
 
     def on_diagrams_page_gui(self):
         self.on_today_widget_gui()
+        self.on_catalog_widget_gui()
         self.on_week_widget_gui()
         self.on_month_widget_gui()
         self.diagram_page_layout.addStretch()
+
+    def on_catalog_widget_gui(self):
+        self.update_writing_count()
+        self.catalog = QVBoxLayout()
+        self.lw_catalog = QListWidget()
+        # self.lw_catalog.setFixedHeight(self.content_height)
+        self.lw_catalog.setObjectName('borderblock')
+        # self.lw_catalog.setSizePolicy(self.lw_catalog.sizePolicy().horizontalPolicy(),
+        #                   QSizePolicy.Expanding)
+#TODO 高度问题
+
+        for f_name in self.txt_files:
+            self.lw_catalog.addItem(f_name)
+        self.catalog.addWidget(self.lw_catalog)
+        self.diagram_page_layout.addLayout(self.catalog)
 
     def on_today_widget_gui(self):
         self.update_writing_count()
@@ -458,6 +474,8 @@ class MainUI(QWidget):
         tab_btn_0 = QPushButton(' 统计 ')
         # tab_btn_0.setFixedWidth((self.content_width-18)//3)
 
+        tab_btn_3 = QPushButton(' 目录 ')
+
         tab_btn_1 = QPushButton('周视图')
         # tab_btn_1.setFixedWidth((self.content_width-18)//3)
 
@@ -467,24 +485,30 @@ class MainUI(QWidget):
         tab_btn_0.setObjectName('tab')
         tab_btn_1.setObjectName('tab')
         tab_btn_2.setObjectName('tab')
+        tab_btn_3.setObjectName('tab')
+
 
         tab_btn_0.setCheckable(True)
         tab_btn_1.setCheckable(True)
         tab_btn_2.setCheckable(True)
+        tab_btn_3.setCheckable(True)
 
-        tab_btn_0.setChecked(True)
+        tab_btn_3.setChecked(True)
 
         self.btns_tabHeader = QButtonGroup(self)
         self.btns_tabHeader.setExclusive(True)
         # self.btns_tabHeader.buttonToggled.connect(self.on_graph_widget_changed)
         self.btns_tabHeader.buttonClicked.connect(self.on_graph_widget_changed)
         self.btns_tabHeader.addButton(tab_btn_0,0)
-        self.btns_tabHeader.addButton(tab_btn_1,1)
-        self.btns_tabHeader.addButton(tab_btn_2,2)
+        self.btns_tabHeader.addButton(tab_btn_3,1)
+        self.btns_tabHeader.addButton(tab_btn_1,2)
+        self.btns_tabHeader.addButton(tab_btn_2,3)
+
 
         # self.diagram_head.addSpacing(self.edge_spacing)
         # self.diagram_head.addStretch()
         self.diagram_head.addWidget(tab_btn_0)
+        self.diagram_head.addWidget(tab_btn_3)
         self.diagram_head.addWidget(tab_btn_1)
         self.diagram_head.addWidget(tab_btn_2)
         self.diagram_head.setContentsMargins(0,0,0,0)
@@ -511,11 +535,12 @@ class MainUI(QWidget):
         self.info_bannar.setText('')
         print(f'current tab: {idx}')
         switch_today = (idx == 0) and vis
-        switch_week = (idx == 1) and vis
-        switch_month = (idx == 2) and vis
+        switch_catalog = (idx == 1) and vis
+        switch_week = (idx == 2) and vis
+        switch_month = (idx == 3) and vis
 
         self.set_layout_vis(self.summaries, switch_today)
-
+        self.set_layout_vis(self.catalog, switch_catalog)
         self.set_layout_vis(self.week_diagram_layout, switch_week)
         self.week_widget.setVisible(switch_week)
         self.set_layout_vis(self.month_diagram_layout, switch_month)
