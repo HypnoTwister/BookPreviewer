@@ -27,6 +27,7 @@ CUSTOM_FONTS = resource_path("resources/TempFont.ttf")
 # ICON_PATH = resource_path("resources/book.ico")
 ICON_PATH = resource_path("resources/smartphone.png")
 # CSV_COUNTER = resource_path('resources/writingcounter.csv')
+CATALOG_CSV = resource_path('resources/catalogue.csv')
 CSV_COUNTER = ''
 
 local_path = os.path.join(os.path.expanduser('~'), 'AppData', 'Local')
@@ -188,6 +189,7 @@ class MainUI(QWidget):
         headerline = QVBoxLayout()
         header = QHBoxLayout()
         self.comb_file = QComboBox(self)
+        self.comb_file.view().setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.collect_files = []
         self.refresh_mark = False
         self.txt_files = []
@@ -214,7 +216,7 @@ class MainUI(QWidget):
         self.btn_open.setFont(self.GFont)
         self.btn_open.clicked.connect(self.open_folder)
 
-        self.btn_tabs = QPushButton('A')
+        self.btn_tabs = QPushButton('↗')
         self.btn_tabs.setObjectName('ico')
         self.btn_tabs.setFixedWidth(self.head_btn_size)
         self.btn_tabs.setFixedHeight(self.head_btn_size)
@@ -304,7 +306,7 @@ class MainUI(QWidget):
         layout.addLayout(content)
         # ----------------------End----------------------
 
-        self.switch_to_book_content(True)
+        self.switch_to_book_content(False)
         layout.addStretch()
         self.setLayout(layout)
 
@@ -434,18 +436,33 @@ class MainUI(QWidget):
         self.on_month_widget_gui()
         self.diagram_page_layout.addStretch()
 
+    def on_pressed_book_from_catalog(self):
+        f_name = self.lw_catalog.currentItem().text().split('      ')[0]
+        self.comb_file.setCurrentText(f_name)
+
+    def on_dclicked_book_from_catalog(self):
+        self.on_pressed_book_from_catalog()
+        self.tab_switching()
+
     def on_catalog_widget_gui(self):
         self.update_writing_count()
         self.catalog = QVBoxLayout()
         self.lw_catalog = QListWidget()
-        # self.lw_catalog.setFixedHeight(self.content_height)
+        self.lw_catalog.setFixedHeight(int(self.content_height*0.9))
         self.lw_catalog.setObjectName('borderblock')
-        # self.lw_catalog.setSizePolicy(self.lw_catalog.sizePolicy().horizontalPolicy(),
-        #                   QSizePolicy.Expanding)
-#TODO 高度问题
+        self.lw_catalog.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        with open(CATALOG_CSV, mode='r', newline='',encoding='utf-8-sig') as fcsv:
+            reader = csv.reader(fcsv)
+            readerlist = list(reader)
+            for i in range(len(readerlist)):
+                rl = readerlist[len(readerlist) - i - 1]
+                fname = rl[0].split('.txt')[0]
+                fname += f"      {rl[1]}" if rl[1]!= '0' else ''
+                self.lw_catalog.addItem(fname)
 
-        for f_name in self.txt_files:
-            self.lw_catalog.addItem(f_name)
+        self.lw_catalog.pressed.connect(self.on_pressed_book_from_catalog)
+        self.lw_catalog.doubleClicked.connect(self.on_dclicked_book_from_catalog)
+
         self.catalog.addWidget(self.lw_catalog)
         self.diagram_page_layout.addLayout(self.catalog)
 
@@ -995,26 +1012,40 @@ class MainUI(QWidget):
 
     def get_writing_count(self):
         total = 0
+        catalogue_rows = []
         for f_name in self.txt_files:
             f_path  = os.path.join(BOOK_SHELF, f_name)
             f_path = f_path.replace('\\','/')
             if f_path.endswith('/'): f_path = f_path[0:-1]
             if not os.path.exists(f_path): continue
             try:
-                with open(f_path, 'r', encoding='utf-8') as file:
+                with open(f_path, 'r', encoding='utf-8-sig') as file:
                     # content = file.read()
                     # clean_content = content.replace('\n','').replace(' ','')
                     # total += len(clean_content)
+                    clean_content = ''
+                    content = ''
                     contents = file.readlines()
                     for line in contents:
                         cleanline_arr = line.split('//')
                         if cleanline_arr is None: continue
                         if len(cleanline_arr)<1: continue
                         cleanline = cleanline_arr[0]
+                        content += cleanline
                         cleanline = cleanline.replace('\n','').replace(' ','')
                         total += len(cleanline)
+                    clean_content = content.replace('\n','').replace(' ','')
+                    chinese_characters = re.findall(COMMON_CHS, clean_content)
+                    chinese_count = len(chinese_characters)
+                    chapter_count = len(clean_content)
+                    catalogue_line = [f_name,chinese_count,chapter_count]
+                    catalogue_rows.append(catalogue_line)
             except:
                 continue
+
+        with open(CATALOG_CSV, mode='w', newline='',encoding='utf-8-sig') as fcsv:
+            writer = csv.writer(fcsv)
+            writer.writerows(catalogue_rows)
         return total
 
     def on_floating_button1_clicked(self):
@@ -1129,11 +1160,8 @@ class MainUI(QWidget):
         self.text_edit.setHtml(html_text)
 
     def get_counter_label(self):
-        clean_content = self.novel_content.replace('\n','').replace(' ','')
-        total = len(clean_content)
-
-        chinese_characters = re.findall(COMMON_CHS, clean_content)
-        chinese_count = len(chinese_characters)
+        content = self.novel_content
+        clean_content, total, chinese_count = self.analyse_content_count(content)
 
         # 匹配生僻汉字
         rare_chinese_characters = re.findall(NOT_COMMON, clean_content)
@@ -1141,6 +1169,14 @@ class MainUI(QWidget):
 
         count_text = f'总字符: {total} 汉字: {chinese_count} 警告: {rare_chinese_count}  '
         return count_text
+
+    def analyse_content_count(self, content):
+        clean_content = content.replace('\n','').replace(' ','')
+        total = len(clean_content)
+
+        chinese_characters = re.findall(COMMON_CHS, clean_content)
+        chinese_count = len(chinese_characters)
+        return clean_content,total,chinese_count
 
     def reload_novel_from_combo(self, keep_scroll = False):
         scroll_position = self.text_edit.verticalScrollBar().value()

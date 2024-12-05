@@ -3,6 +3,7 @@
     /* font: 微软雅黑; */
     outline: none;
     padding:0px;
+    color: #3f3f3f;
 }
 *#bg{
     background-color: #8c9fff;
