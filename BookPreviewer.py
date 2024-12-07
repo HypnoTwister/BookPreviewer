@@ -27,8 +27,9 @@ CUSTOM_FONTS = resource_path("resources/TempFont.ttf")
 # ICON_PATH = resource_path("resources/book.ico")
 ICON_PATH = resource_path("resources/smartphone.png")
 # CSV_COUNTER = resource_path('resources/writingcounter.csv')
-CATALOG_CSV = resource_path('resources/catalogue.csv')
+# CATALOG_CSV = resource_path('resources/catalogue.csv')
 CSV_COUNTER = ''
+CATALOG_CSV = ''
 
 local_path = os.path.join(os.path.expanduser('~'), 'AppData', 'Local')
 PRESET_PATH = os.path.join(local_path,'BookPreviewer/preset.txt').replace('\\','/')
@@ -451,6 +452,19 @@ class MainUI(QWidget):
         self.lw_catalog.setFixedHeight(int(self.content_height*0.9))
         self.lw_catalog.setObjectName('borderblock')
         self.lw_catalog.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.lw_catalog.pressed.connect(self.on_pressed_book_from_catalog)
+        self.lw_catalog.doubleClicked.connect(self.on_dclicked_book_from_catalog)
+        self.catalog.addWidget(self.lw_catalog)
+        self.diagram_page_layout.addLayout(self.catalog)
+
+    def update_catalog_widget(self):
+        self.lw_catalog.clear()
+        global BOOK_SHELF
+        global CATALOG_CSV
+        if BOOK_SHELF == '':
+            BOOK_SHELF = self.GetPreset('ShelfPath')
+        if CATALOG_CSV=='':
+            CATALOG_CSV = os.path.join(BOOK_SHELF,'data/catalogue.csv').replace('\\','/')
         with open(CATALOG_CSV, mode='r', newline='',encoding='utf-8-sig') as fcsv:
             reader = csv.reader(fcsv)
             readerlist = list(reader)
@@ -459,12 +473,6 @@ class MainUI(QWidget):
                 fname = rl[0].split('.txt')[0]
                 fname += f"      {rl[1]}" if rl[1]!= '0' else ''
                 self.lw_catalog.addItem(fname)
-
-        self.lw_catalog.pressed.connect(self.on_pressed_book_from_catalog)
-        self.lw_catalog.doubleClicked.connect(self.on_dclicked_book_from_catalog)
-
-        self.catalog.addWidget(self.lw_catalog)
-        self.diagram_page_layout.addLayout(self.catalog)
 
     def on_today_widget_gui(self):
         self.update_writing_count()
@@ -796,6 +804,7 @@ class MainUI(QWidget):
         self.update_week_diagram()
         self.update_month_diagram()
         self.update_summary_diagram()
+        self.update_catalog_widget()
 
     def update_summary_diagram(self):
         recordlist = list(self.records.values())
@@ -1042,7 +1051,9 @@ class MainUI(QWidget):
                     catalogue_rows.append(catalogue_line)
             except:
                 continue
-
+        global CATALOG_CSV
+        if CATALOG_CSV == '':
+            CATALOG_CSV = os.path.join(BOOK_SHELF,'data/catalogue.csv').replace('\\','/')
         with open(CATALOG_CSV, mode='w', newline='',encoding='utf-8-sig') as fcsv:
             writer = csv.writer(fcsv)
             writer.writerows(catalogue_rows)
