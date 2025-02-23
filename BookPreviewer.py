@@ -818,13 +818,19 @@ class MainUI(QWidget):
         self.month_summary_widget.setSummary(month_sum)
 
     def get_recently_summaries(self, day_length = 7):
-        recently_date = Custom_today() - datetime.timedelta(days = day_length)
-        pre_sum = 0
+        # recently_date = Custom_today() - datetime.timedelta(days = day_length)
+        # pre_sum = 0
         record_list = list(self.records.values())
-        for i in range(len(record_list)):
-            if record_list[i] > pre_sum and list(self.records.keys())[i] < recently_date:
-                pre_sum = record_list[i]
-        sum = self.current_sum - pre_sum
+        list.reverse(record_list)
+        # print("-------------")
+        # print(self.records.values())
+        sum = 0
+        for i in range(day_length):
+            sum += record_list[i]
+            # if record_list[i] > pre_sum and list(self.records.keys())[i] < recently_date:
+            #     pre_sum = record_list[i]
+        # sum = self.current_sum - pre_sum
+        # print(f"Week Sum: {sum}")
         return sum
 
     def update_week_diagram(self):
