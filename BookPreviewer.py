@@ -40,6 +40,8 @@ COMMON_CHS = r'[\u4E00-\u9FFF\u3400-\u4DBF]'
 NOT_COMMON = rf'[^{PUNCTUATION_STR}{LETTERS}{NUMS}\u4E00-\u9FFF \n]'
 NUMBER = r'([0-9]+)'
 
+TODAY_DEADLINE = 6
+
 def load_custom_font():
     """加载自定义字体"""
     font_id = QFontDatabase.addApplicationFont(CUSTOM_FONTS)
@@ -125,13 +127,13 @@ class SummaryGraph(QWidget):
 
 def Custom_today(timeshift = 0):
     now = datetime.datetime.now()
-    # 计算今天八点的时间
-    today_eight_am = datetime.datetime(now.year, now.month, now.day, 8, 0, 0)
-    if now < today_eight_am:
+    # 计算今天Deadline的时间
+    today_deadline_am = datetime.datetime(now.year, now.month, now.day, TODAY_DEADLINE, 0, 0)
+    if now < today_deadline_am:
         # 如果当前时间在今天八点之前，则返回昨天的八点
-        today_eight_am -= datetime.timedelta(days=1)
-    if timeshift!=0: today_eight_am += datetime.timedelta(days=timeshift)
-    return today_eight_am.date()
+        today_deadline_am -= datetime.timedelta(days=1)
+    if timeshift!=0: today_deadline_am += datetime.timedelta(days=timeshift)
+    return today_deadline_am.date()
 
 class MainUI(QWidget):
     def __init__(self):
@@ -217,6 +219,13 @@ class MainUI(QWidget):
         self.btn_open.setFont(self.GFont)
         self.btn_open.clicked.connect(self.open_folder)
 
+        self.btn_export = QPushButton('▼')
+        self.btn_export.setObjectName('ico')
+        self.btn_export.setFixedWidth(self.head_btn_size)
+        self.btn_export.setFixedHeight(self.head_btn_size)
+        self.btn_export.setFont(self.GFont)
+        self.btn_export.clicked.connect(self.export_txt)
+
         self.btn_tabs = QPushButton('↗')
         self.btn_tabs.setObjectName('ico')
         self.btn_tabs.setFixedWidth(self.head_btn_size)
@@ -232,6 +241,7 @@ class MainUI(QWidget):
         self.btn_close.setFixedHeight(self.head_btn_size)
 
         header.addWidget(self.btn_open)
+        header.addWidget(self.btn_export)
         header.addWidget(self.btn_tabs)
         header.addWidget(self.btn_close)
         header.addSpacing(self.edge_spacing)
@@ -399,6 +409,31 @@ class MainUI(QWidget):
         self.info_bannar = QLabel('')
         self.info_bannar.setObjectName('info')
         self.diagram_page_layout.addWidget(self.info_bannar)
+
+    def export_txt(self):
+        files = self.get_files_from_dir()
+        txt_reverse = [f for f in files if not f.startswith('Doc_')]
+        fi_contents = []
+        txt_reverse.reverse()
+        for fi in txt_reverse:
+            finame = fi.replace("章节","章")
+            if '.' in finame: finame = finame.split('.')[0]
+            fi_content = f'{finame}\n'
+            fi_content += self.load_novel(fi)
+            fi_contents.append(fi_content)
+
+        contents_to_write = '\n'.join(fi_contents)
+
+        td = datetime.date.today()
+        export_fi_path = os.path.join(BOOK_SHELF, f'export/ExportFile_{td}.txt')
+        export_dir = os.path.dirname(export_fi_path)
+        if not os.path.exists(export_dir):
+            os.makedirs(export_dir)
+
+        with open(export_fi_path, mode='w', encoding='utf-8-sig') as f:
+            f.write(contents_to_write)
+
+        print(f"预览文件已存储到：{export_fi_path}")
 
     def tab_switching(self):
         if self.btn_tabs.text() != 'A':
@@ -1250,12 +1285,18 @@ class MainUI(QWidget):
             with open(file_path, 'r', encoding='utf-8') as file:
                 lines = file.readlines()
                 if file_name.startswith('Doc_'): return ''.join(lines)
-                pattern = r"//.*$"
-                repeatEmpty = r'[\n]{3,}'
-                cleaned_lines = [re.sub(pattern, '', line).strip() for line in lines]
+                pattern = r"\s*//.*$"
+                repeatEnter = r'\n{3,}'
+                repeatEmpty = r'\s+'
+                cleaned_lines = [re.sub(pattern, '', line) for line in lines]
+                cleaned_lines = [re.sub(repeatEmpty, '', line) for line in cleaned_lines]
+                cleaned_lines = [re.sub('\n', '', line) for line in cleaned_lines]
                 content = '\n'.join(cleaned_lines)
-                content = re.sub(repeatEmpty,'\n\n',content)
-                content = re.sub(r'[\n]','\n    ',content)
+                content = re.sub(repeatEnter,'\n\n',content)
+                content = re.sub('\n+$','',content)
+                content = re.sub('^\n+','',content)
+                content = f'{content}\n'
+                content = re.sub(r'(^|\n)',r'\n    ',content)
                 return content  # 使用 read 读取整个文件的内容
         except PermissionError as e:
             print(f"PermissionError: {e}")
