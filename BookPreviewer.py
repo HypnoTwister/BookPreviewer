@@ -402,7 +402,7 @@ class MainUI(QWidget):
                 writer = csv.writer(f)
                 day = Custom_today(-1)
                 raw_data = [[str(day), '0']]
-                print(f"/////{raw_data}")
+                # print(f"/////{raw_data}")
                 writer.writerows(raw_data)
 
     def on_diagrams_bannar_gui(self):
@@ -572,8 +572,8 @@ class MainUI(QWidget):
         self.diagram_head.addWidget(tab_btn_1)
         self.diagram_head.addWidget(tab_btn_2)
         self.diagram_head.setContentsMargins(0,0,0,0)
-        spacing = self.edge_spacing-15
-        print(f">>>>>>>>{spacing}")
+        # spacing = self.edge_spacing-15
+        # print(f">>>>>>>>{spacing}")
         # self.diagram_head.addStretch()
 
         # self.diagram_page_layout.addStretch()
@@ -593,7 +593,7 @@ class MainUI(QWidget):
     def refresh_graph_widgets_visible(self,vis):
         idx = self.btns_tabHeader.checkedId()
         self.info_bannar.setText('')
-        print(f'current tab: {idx}')
+        # print(f'current tab: {idx}')
         switch_today = (idx == 0) and vis
         switch_catalog = (idx == 1) and vis
         switch_week = (idx == 2) and vis
@@ -872,7 +872,9 @@ class MainUI(QWidget):
         # print("Updating Week Graph")
         self.records_in_week = self.filted_date()
         # print(self.records_in_week)
-        max_count = max(1,max(self.records_in_week.values(), default=1))
+        # print(f"----------{self.records_in_week.values()}")
+        vals = [abs(val) for val in self.records_in_week.values()]
+        max_count = max(1, max(vals, default=1))
         max_barwidth = self.content_width*88//100 - self.edge_spacing - 8
         today = self.activeWeekDay
         for i in range(7):
@@ -885,7 +887,7 @@ class MainUI(QWidget):
                 barname.setText(str(date.day))
                 barname.setFixedWidth(self.fontPixSize*2)
             if isinstance(week_bar, QProgressBar):
-                week_bar_width = max(1, count*100//max_count) if count > 0 else 0
+                week_bar_width = max(1, abs(count) * 100 // max_count)
                 week_bar.setMaximum(100)
                 week_bar.setTextVisible(True)
                 bar_value = f" {count}"
@@ -895,8 +897,8 @@ class MainUI(QWidget):
                 # print(f"date: {date} count: {count} string_width: {string_width}")
                 # print(f'blank width:{font_metrics.width(" ")}')
 
-                if week_bar_width<0:
-                    week_bar_width = abs(week_bar_width)
+                if count < 0:
+                    # week_bar_width = abs(week_bar_width)
                     week_bar.setObjectName('bar-minus')
                 elif week_bar_width == 0:
                     week_bar.setObjectName('bar-zero')
@@ -1101,12 +1103,12 @@ class MainUI(QWidget):
         return total
 
     def on_floating_button1_clicked(self):
-        print('btn 1: add')
+        # print('btn 1: add')
         presize = self.text_edit.font().pointSizeF()
         targetSize = int(presize) + 1
         self.text_edit_size_add(presize, targetSize)
         afterSize = self.text_edit.font().pointSizeF()
-        print(f'Presize:{presize} --> AfterSize:{afterSize}')
+        # print(f'Presize:{presize} --> AfterSize:{afterSize}')
 
     def text_edit_size_add(self, presize, targetSize):
         if targetSize > self.font_sizes[1] or targetSize < self.font_sizes[0]:
@@ -1123,12 +1125,12 @@ class MainUI(QWidget):
         print(f"最终结果：{aftersize}/{targetSize}")
 
     def on_floating_button2_clicked(self):
-        print('btn 2: minus')
+        # print('btn 2: minus')
         presize = self.text_edit.font().pointSizeF()
         targetSize = int(presize) - 1
         self.text_edit_size_minus(presize, targetSize)
         afterSize = self.text_edit.font().pointSizeF()
-        print(f'Presize:{presize} --> AfterSize:{afterSize}')
+        # print(f'Presize:{presize} --> AfterSize:{afterSize}')
 
     def text_edit_size_minus(self, presize, targetSize):
         if targetSize > self.font_sizes[1] or targetSize < self.font_sizes[0]:
@@ -1280,7 +1282,7 @@ class MainUI(QWidget):
             file_path = file_path.replace('\\','/')
             if file_path.endswith('/'): file_path = file_path[0:-1]
             if not os.path.exists(file_path): return ''
-            print(file_path)
+            # print(file_path)
             # file_path = resource_path(file_path)
             with open(file_path, 'r', encoding='utf-8') as file:
                 lines = file.readlines()
