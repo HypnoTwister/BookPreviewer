@@ -52,6 +52,14 @@ def load_custom_font():
         return font_family
     return '等线'
 
+def analyse_content_count(content):
+    clean_content = content.replace('\n','').replace(' ','')
+    total = len(clean_content)
+
+    chinese_characters = re.findall(COMMON_CHS, clean_content)
+    chinese_count = len(chinese_characters)
+    return clean_content,total,chinese_count
+
 class CustomHLine(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -67,27 +75,59 @@ class CustomTextEdit(QTextEdit):
         self.setReadOnly(True)
         # 禁用文本框的焦点获取，确保点击不影响光标位置
         self.setFocusPolicy(Qt.NoFocus)
-        # 禁用选择文本功能
-        self.setTextInteractionFlags(Qt.NoTextInteraction)
+
+        #禁用选择文本功能
+        # self.setTextInteractionFlags(Qt.NoTextInteraction)
+        #禁用右键菜单
+        self.setContextMenuPolicy(Qt.NoContextMenu)
+
         self.setCursor(Qt.ArrowCursor)
         self.currentBlock = 0
         self.logger = logger
+
+        self.main_window = parent
+        self.selections = 0
 
     def wheelEvent(self, event):
         # 处理滚轮事件以确保可以滚动
         self.refreshingBlockNum(event)
         super().wheelEvent(event)
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.RightButton and self.main_window:
+            self.main_window.Right_mouse_press(event)
+        else:
+            super().mousePressEvent(event)
+
     def mouseMoveEvent(self, event):
          # 获取当前点击的block号
         self.refreshingBlockNum(event)
         super().mouseMoveEvent(event)
+        if self.main_window and self.main_window.Right_button_pressed:
+            self.main_window.Right_mouse_move(event)
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        # return super().mouseReleaseEvent(e)
+        if event.button() == Qt.RightButton:
+            self.refreshingBlockNum(event)
+
+        if self.main_window and self.main_window.Right_button_pressed:
+            self.main_window.Right_mouse_release(event)
+        else:
+            super().mouseReleaseEvent(event)
 
     def refreshingBlockNum(self, event):
         if isinstance(self.logger, QLabel):
             cursor = self.cursorForPosition(event.pos())
             self.currentBlock = cursor.blockNumber()+1
-            self.logger.setText(f'当前:{self.currentBlock}')
+            clean_content, total, self.selections = analyse_content_count(self.textCursor().selectedText())
+            loggercontent = f'行:{self.currentBlock} 选中:{self.selections}'
+            # self.logger.setText(f'行:{self.currentBlock} 选中:{self.selections}')
+            oldLoggerText = self.logger.text().split('行')[0]
+            self.logger.setText(oldLoggerText + loggercontent)
+            # self.logger = f'行:{self.currentBlock} 选中:{self.selections}'
 
 class ClickableProgressBar(QProgressBar):
     hover = pyqtSignal(object)  # 修改信号定义，使其接受一个参数
@@ -253,6 +293,9 @@ class MainUI(QWidget):
         # --------------------小说内容----------------------
         content = QHBoxLayout()
         # 创建一个 QTextEdit 用于显示小说内容
+
+        self.Right_button_pressed = False
+
         self.text_edit = CustomTextEdit(self)
         self.text_edit.setFixedHeight(self.content_height)
         self.text_edit.setFixedWidth(self.content_width)
@@ -265,16 +308,19 @@ class MainUI(QWidget):
         content.addStretch()
 
         footer = QHBoxLayout()
-        self.counter = QLabel(self.get_counter_label())
-        self.counter.setContentsMargins(self.edge_spacing,0,0,0)
-        self.block_pos=QLabel(f'当前: {self.text_edit.currentBlock}')
-        self.block_pos.setContentsMargins(0,0,self.edge_spacing,0)
+        self.editlogger = f'行:{self.text_edit.currentBlock} 选中:{self.text_edit.selections}'
+        footerContent = self.get_counter_label() + self.editlogger
+        self.counter = QLabel(footerContent)
+        self.counter.setContentsMargins(self.edge_spacing,0,self.edge_spacing,0)
+        # self.block_pos=QLabel(f'行:{self.text_edit.currentBlock} 选中:{self.text_edit.selections}')
+        # self.block_pos.setContentsMargins(0,0,self.edge_spacing,0)
+        self.text_edit.logger = self.counter
+
         self.resize_footer_fonts()
 
-        self.text_edit.logger = self.block_pos
         footer.addWidget(self.counter)
-        footer.addWidget(self.block_pos)
-        footer.setAlignment(Qt.AlignBottom)  # Set alignment to right
+        # footer.addWidget(self.block_pos)
+        footer.setAlignment(Qt.AlignBottom)
 
         # 禁用滚动条
         self.text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -324,13 +370,16 @@ class MainUI(QWidget):
     def resize_footer_fonts(self, first=True):
         footerFont = self.counter.font()
         if first: self.footerMetrics = QFontMetrics(footerFont)
-        counter_width = self.footerMetrics.width(self.counter.text())
-        pos_width = self.footerMetrics.width(self.block_pos.text())
-        footfactor = (counter_width + pos_width)/self.content_width
-        ptFooter = self.fontPointSize/ footfactor
+        counter_width = self.footerMetrics.width(self.counter.text()+"       ")
+        # pos_width = self.footerMetrics.width(self.block_pos.text())
+        # footfactor = (counter_width + pos_width)/self.content_width
+        print(f"CounterWidth/CountentWidth: {counter_width}/{self.content_width-(2*self.edge_spacing)}")
+        footfactor = (counter_width)/(self.content_width-(2*self.edge_spacing))
+        ptFooter = self.fontPointSize/footfactor
+        print(f'ptFooter:{ptFooter}')
         footerFont.setPointSizeF(ptFooter)
         self.counter.setFont(footerFont)
-        self.block_pos.setFont(footerFont)
+        # self.block_pos.setFont(footerFont)
 
     def scale_change(self, event):
         scalesize = self.scale
@@ -338,7 +387,7 @@ class MainUI(QWidget):
             scalesize = self.scale + 0.15
         elif scalesize >= 0.9 and scalesize < 1.0:
             scalesize = self.scale + 0.1
-        else: scalesize = 0.45
+        else: scalesize = 0.75
         self.scale = scalesize
         print(f'X{format(self.scale, ".2f")}')
         self.size_sel.setText(f'X{format(self.scale, ".2f")}')
@@ -459,7 +508,7 @@ class MainUI(QWidget):
         self.update_diagrams()
         self.text_edit.setVisible(visible)
         self.counter.setVisible(visible)
-        self.block_pos.setVisible(visible)
+        # self.block_pos.setVisible(visible)
         self.info_bannar.setVisible(not(visible))
         self.set_layout_vis(self.diagram_page_layout, not(visible))
         self.refresh_graph_widgets_visible(not(visible))
@@ -1122,7 +1171,7 @@ class MainUI(QWidget):
             if int(aftersize) < targetSize:
                 print(f'{aftersize}不足，递归计算{targetSize}')
                 self.text_edit_size_add(presize, targetSize)
-        print(f"最终结果：{aftersize}/{targetSize}")
+        print(f"最终结果 aftersize/targetSize: {aftersize}/{targetSize}")
 
     def on_floating_button2_clicked(self):
         # print('btn 2: minus')
@@ -1144,7 +1193,7 @@ class MainUI(QWidget):
             if int(aftersize) > targetSize:
                 print(f'{aftersize}不足，递归计算{targetSize}')
                 self.text_edit_size_minus(presize, targetSize)
-        print(f"最终结果：{aftersize}/{targetSize}")
+        print(f"最终结果 aftersize/targetSize: {aftersize}/{targetSize}")
 
 
     def on_floating_button3_clicked(self):
@@ -1215,31 +1264,31 @@ class MainUI(QWidget):
 
     def get_counter_label(self):
         content = self.novel_content
-        clean_content, total, chinese_count = self.analyse_content_count(content)
+        clean_content, total, chinese_count = analyse_content_count(content)
 
         # 匹配生僻汉字
         rare_chinese_characters = re.findall(NOT_COMMON, clean_content)
         rare_chinese_count = len(rare_chinese_characters)
 
-        count_text = f'总字符: {total} 汉字: {chinese_count} 警告: {rare_chinese_count}  '
+        count_text = f'汉字:{chinese_count} 警告:{rare_chinese_count} '
         return count_text
 
-    def analyse_content_count(self, content):
-        clean_content = content.replace('\n','').replace(' ','')
-        total = len(clean_content)
+    # def analyse_content_count(self, content):
+    #     clean_content = content.replace('\n','').replace(' ','')
+    #     total = len(clean_content)
 
-        chinese_characters = re.findall(COMMON_CHS, clean_content)
-        chinese_count = len(chinese_characters)
-        return clean_content,total,chinese_count
+    #     chinese_characters = re.findall(COMMON_CHS, clean_content)
+    #     chinese_count = len(chinese_characters)
+    #     return clean_content,total,chinese_count
 
     def reload_novel_from_combo(self, keep_scroll = False):
         scroll_position = self.text_edit.verticalScrollBar().value()
         self.novel_content = self.load_novel(self.comb_file.currentText() + '.txt')
         self.text_edit.setText(self.novel_content)
-
-        self.counter.setText(self.get_counter_label())
+        self.editlogger = f'行:{self.text_edit.currentBlock} 选中:{self.text_edit.selections}'
+        self.counter.setText(self.get_counter_label() + self.editlogger)
         self.highlight_text()
-        self.resize_footer_fonts(False)
+        # self.resize_footer_fonts(False)
         if keep_scroll:
             # 恢复滚动条位置
            self.text_edit.verticalScrollBar().setValue(scroll_position)
@@ -1324,17 +1373,7 @@ class MainUI(QWidget):
         self.refresh_mark = True
         self.info_bannar.setText('')
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            click_x = event.x()
-            click_y = event.y()
-            window_width = self.width()
-            window_height = self.height()
 
-            # if click_y < window_height / 2:
-                # 上半部分点击，进行窗口拖动
-            self.old_pos = event.globalPos()
-            self.RefreshingTxtLoad()
 
     def RefreshingTxtLoad(self):
         if self.refresh_mark:
@@ -1354,24 +1393,53 @@ class MainUI(QWidget):
             #     else:
             #         self.next_page()
 
+    def mousePressEvent(self, event):
+        # if event.button() == Qt.RightButton:
+        if event.button() == Qt.RightButton:
+            self.mousePressAction(event)
+
+    def mousePressAction(self, event):
+        click_x = event.x()
+        click_y = event.y()
+        window_width = self.width()
+        window_height = self.height()
+        # if click_y < window_height / 2:
+            # 上半部分点击，进行窗口拖动
+        self.old_pos = event.globalPos()
+        self.RefreshingTxtLoad()
+
     def mouseMoveEvent(self, event):
         # 计算鼠标移动的距离，并移动窗口（仅当在上半部分点击时有效）
-        # if event.button() == Qt.LeftButton:
+        # if event.button() == Qt.RightButton:
+        self.mouseMoveAction(event)
+        # self.resize_footer_fonts(False)
+
+    def mouseMoveAction(self, event):
         if self.old_pos:
             delta = event.globalPos() - self.old_pos
             self.move(self.x() + delta.x(), self.y() + delta.y())
             self.old_pos = event.globalPos()
 
-    # def mouseReleaseEvent(self, event):
-    #     # 鼠标释放时重置 old_pos
-    #     self.old_pos = None
-    #     self.refresh_items()
-    #     self.reload_novel_from_combo(True)
-
     def mouseReleaseEvent(self, event):
         # 鼠标释放时重置 old_pos
-        if event.button() == Qt.LeftButton:
-            self.old_pos = None
+        if event.button() == Qt.RightButton:
+        # if event.button() == Qt.RightButton:
+            self.mouseReleaseAction()
+
+    def mouseReleaseAction(self):
+        self.old_pos = None
+
+    def Right_mouse_press(self, event):
+        self.Right_button_pressed = True
+        self.mousePressAction(event)
+
+    def Right_mouse_move(self, event):
+        if self.Right_button_pressed:
+             self.mouseMoveAction(event)
+
+    def Right_mouse_release(self, event):
+        self.Right_button_pressed = False
+        self.mouseReleaseAction()
 
     def enterEvent(self, event):
         self.RefreshingTxtLoad()
