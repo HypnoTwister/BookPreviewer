@@ -898,18 +898,27 @@ class MainUI(QWidget):
         self.book_summary_widget.setSummary(self.current_sum)
         week_sum = self.get_recently_summaries()
         self.week_summary_widget.setSummary(week_sum)
-        month_sum = self.get_recently_summaries(self.get_current_monthdays(Custom_today()))
+        month_sum = self.get_recently_summaries(Custom_today().day)
         self.month_summary_widget.setSummary(month_sum)
 
     def get_recently_summaries(self, day_length = 7):
         # recently_date = Custom_today() - datetime.timedelta(days = day_length)
+        date_in_range = Custom_today() - datetime.timedelta(days = day_length)
         # pre_sum = 0
+        day_list = list(self.records.keys())
         record_list = list(self.records.values())
         list.reverse(record_list)
+        list.reverse(day_list)
         # print("-------------")
         # print(self.records.values())
         sum = 0
         for i in range(day_length):
+            day = day_list[i]
+            # if day_length == 7:
+            #     print(f"Length:{day_length}，Range:{date_in_range}")
+            #     print(f"Day Test: {day} --- last sum:{sum}")
+            #     print(day<date_in_range)
+            if day <= date_in_range: break
             sum += record_list[i]
             # if record_list[i] > pre_sum and list(self.records.keys())[i] < recently_date:
             #     pre_sum = record_list[i]
@@ -1079,7 +1088,8 @@ class MainUI(QWidget):
         last_day_of_current_month = next_month - datetime.timedelta(days=1)
         days_in_month = last_day_of_current_month.day
 
-        # print(f"当前月份的天数: {days_in_month}")
+        # days_in_month = now.day
+        print(f"当前月份的天数: {days_in_month}")
         return days_in_month
 
     def update_writing_count(self):
