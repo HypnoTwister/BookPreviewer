@@ -266,6 +266,14 @@ class MainUI(QWidget):
         self.btn_export.setFont(self.GFont)
         self.btn_export.clicked.connect(self.export_txt)
 
+        self.preview_lines = QPushButton('≣')
+        self.preview_lines.setObjectName('ico')
+        self.preview_lines.setFixedWidth(self.head_btn_size)
+        self.preview_lines.setFixedHeight(self.head_btn_size)
+        self.preview_lines.setFont(self.GFont)
+        self.preview_lines.clicked.connect(self.lines_switching)
+        self.preview_lines.setVisible(False)
+
         self.btn_tabs = QPushButton('↗')
         self.btn_tabs.setObjectName('ico')
         self.btn_tabs.setFixedWidth(self.head_btn_size)
@@ -282,6 +290,7 @@ class MainUI(QWidget):
 
         header.addWidget(self.btn_open)
         header.addWidget(self.btn_export)
+        header.addWidget(self.preview_lines)
         header.addWidget(self.btn_tabs)
         header.addWidget(self.btn_close)
         header.addSpacing(self.edge_spacing)
@@ -484,12 +493,25 @@ class MainUI(QWidget):
 
         print(f"预览文件已存储到：{export_fi_path}")
 
+    def lines_switching(self):
+        # 切换空格显示模式
+        if self.preview_lines.text() != '≣':
+            self.preview_lines.setText("≣")
+            self.reload_novel_from_combo(True)
+        else:
+            self.preview_lines.setText("=")
+            self.reload_novel_from_combo(True)
+
     def tab_switching(self):
         if self.btn_tabs.text() != 'A':
             self.btn_tabs.setText("A")
+            self.preview_lines.setVisible(True)
+            self.btn_export.setVisible(False)
             self.switch_to_book_content(True)
         else:
             self.btn_tabs.setText("↗")
+            self.preview_lines.setVisible(False)
+            self.btn_export.setVisible(True)
             self.switch_to_book_content(False)
 
     def set_layout_vis(self, layout, visible):
@@ -1352,11 +1374,18 @@ class MainUI(QWidget):
                 cleaned_lines = [re.sub(pattern, '', line) for line in lines]
                 cleaned_lines = [re.sub(repeatEmpty, '', line) for line in cleaned_lines]
                 cleaned_lines = [re.sub('\n', '', line) for line in cleaned_lines]
-                content = '\n'.join(cleaned_lines)
+                content = ''
+                if self.preview_lines.text() != '≣':
+                    content += '\n\n'.join(cleaned_lines)
+                else:
+                    content += '\n'.join(cleaned_lines)
                 content = re.sub(repeatEnter,'\n\n',content)
                 content = re.sub('\n+$','',content)
                 content = re.sub('^\n+','',content)
-                content = f'{content}\n'
+                if self.preview_lines.text() != '≣':
+                    content = f'{content}\n\n'
+                else:
+                    content = f'{content}\n'
                 content = re.sub(r'(^|\n)',r'\n    ',content)
                 return content  # 使用 read 读取整个文件的内容
         except PermissionError as e:
