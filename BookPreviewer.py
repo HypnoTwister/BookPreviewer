@@ -480,7 +480,10 @@ class MainUI(QWidget):
             fi_content += self.load_novel(fi)
             fi_contents.append(fi_content)
 
-        contents_to_write = '\n'.join(fi_contents)
+        fi_info = f"总章节数：{len(fi_contents)}"
+        fi_info += f"\n全本字数：{self.current_sum}"
+
+        contents_to_write = fi_info + '\n' + '\n'.join(fi_contents)
 
         td = datetime.date.today()
         export_fi_path = os.path.join(BOOK_SHELF, f'export/ExportFile_{td}.txt')
