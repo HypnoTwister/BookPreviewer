@@ -472,7 +472,7 @@ class MainUI(QWidget):
         files = self.get_files_from_dir()
         txt_reverse = [f for f in files if not f.startswith('Doc_')]
         fi_contents = []
-        txt_reverse.reverse()
+        # txt_reverse.reverse()
         for fi in txt_reverse:
             finame = fi.replace("章节","章")
             if '.' in finame: finame = finame.split('.')[0]
@@ -574,8 +574,13 @@ class MainUI(QWidget):
         with open(CATALOG_CSV, mode='r', newline='',encoding='utf-8-sig') as fcsv:
             reader = csv.reader(fcsv)
             readerlist = list(reader)
+            # for i in range(len(readerlist)):
+            #     rl = readerlist[len(readerlist) - i - 1]
+            #     fname = rl[0].split('.txt')[0]
+            #     fname += f"      {rl[1]}" if rl[1]!= '0' else ''
+            #     self.lw_catalog.addItem(fname)
             for i in range(len(readerlist)):
-                rl = readerlist[len(readerlist) - i - 1]
+                rl = readerlist[i]
                 fname = rl[0].split('.txt')[0]
                 fname += f"      {rl[1]}" if rl[1]!= '0' else ''
                 self.lw_catalog.addItem(fname)
@@ -1334,7 +1339,9 @@ class MainUI(QWidget):
             self.collect_files = files
             self.txt_files = [f for f in files if not f.startswith('Doc_')]
             self.comb_file.clear()
-            for file in files:
+            # for file in files:
+            for i in range(len(files)):
+                file = files[len(files)-i-1]
                 filename = ''
                 if '.' in file : filename = file.split('.')[0]
                 if filename != '': self.comb_file.addItem(filename)
@@ -1349,7 +1356,7 @@ class MainUI(QWidget):
             files = [f for f in os.listdir(BOOK_SHELF) if os.path.isfile(os.path.join(BOOK_SHELF, f)) and f.endswith('.txt')]
             nums = [f for f in files if re.search(NUMBER, f)]
             unnums = [f for f in files if f not in nums]
-            sorted_fs = sorted(nums, key=lambda x: int(re.search(NUMBER, x).group()), reverse=True)
+            sorted_fs = sorted(nums, key=lambda x: int(re.search(NUMBER, x).group()), reverse=False)
             files = unnums + sorted_fs
             return files
         except PermissionError as e:
