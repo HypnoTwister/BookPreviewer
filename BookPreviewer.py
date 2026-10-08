@@ -38,6 +38,7 @@ BOOK_SHELF = r''
 # RARE_CHS = r'[\u3400-\u4DBF\uF900-\uFAFF\U00020000-\U0002EBEF]'
 COMMON_CHS = r'[\u4E00-\u9FFF\u3400-\u4DBF]'
 NOT_COMMON = rf'[^{PUNCTUATION_STR}{LETTERS}{NUMS}\u4E00-\u9FFF \n]'
+# NOT_COMMON = rf'(?:[ ]{{5,}}|[^{PUNCTUATION_STR}{LETTERS}{NUMS}\u4E00-\u9FFF \n])'
 NUMBER = r'([0-9]+)'
 
 TODAY_DEADLINE = 6
@@ -144,7 +145,7 @@ class SummaryGraph(QWidget):
     def __init__(self, label, sum = 0, fSize = 12):
         super().__init__()
         self.sum_layout = QVBoxLayout(self)
-        self.current_label = QLabel(f"{label}字数")
+        self.current_label = QLabel(f"{label}")
         self.current_count_label = QLabel("{:,}".format(sum))
         self.sum_layout.addWidget(self.current_label)
         self.sum_layout.addWidget(CustomHLine())
@@ -162,7 +163,7 @@ class SummaryGraph(QWidget):
         self.current_count_label.setContentsMargins(30,0,0,0)
 
     def setSummary(self, sum, label = ''):
-        if label != '': self.current_label.setText(f"{label}字数")
+        if label != '': self.current_label.setText(f"{label}")
         self.current_count_label.setText("{:,}".format(sum))
 
 def Custom_today(timeshift = 0):
@@ -586,17 +587,20 @@ class MainUI(QWidget):
                 rl = readerlist[i]
                 fname = rl[0].split('.txt')[0]
                 fname += f"      {rl[1]}" if rl[1]!= '0' else ''
+                fname += f"      {rl[2]}" if rl[2]!= '0' else ''
                 self.lw_catalog.addItem(fname)
 
     def on_today_widget_gui(self):
         self.update_writing_count()
-        self.today_summary_widget = SummaryGraph('今日', fSize = int(self.fontPixSize))
-        self.book_summary_widget = SummaryGraph('全本', fSize = int(self.fontPixSize))
-        self.week_summary_widget = SummaryGraph('本周', fSize = int(self.fontPixSize))
-        self.month_summary_widget = SummaryGraph('本月', fSize = int(self.fontPixSize))
+        self.today_summary_widget = SummaryGraph('今日字数', fSize = int(self.fontPixSize))
+        self.book_summary_widget = SummaryGraph('全本字数', fSize = int(self.fontPixSize))
+        self.week_summary_widget = SummaryGraph('本周字数', fSize = int(self.fontPixSize))
+        self.month_summary_widget = SummaryGraph('本月字数', fSize = int(self.fontPixSize))
+        self.chapter_summary_widget = SummaryGraph('全本章节', fSize = int(self.fontPixSize))
         self.summaries = QVBoxLayout()
         self.summaries.addWidget(self.today_summary_widget)
         self.summaries.addWidget(self.book_summary_widget)
+        self.summaries.addWidget(self.chapter_summary_widget)
         self.summaries.addWidget(self.week_summary_widget)
         self.summaries.addWidget(self.month_summary_widget)
 
@@ -930,6 +934,11 @@ class MainUI(QWidget):
         self.week_summary_widget.setSummary(week_sum)
         month_sum = self.get_recently_summaries(Custom_today().day)
         self.month_summary_widget.setSummary(month_sum)
+        chapter_sum = self.get_chapter_summaries()
+        self.chapter_summary_widget.setSummary(chapter_sum)
+
+    def get_chapter_summaries(self):
+        return self.lw_catalog.count()
 
     def get_recently_summaries(self, day_length = 7):
         # recently_date = Custom_today() - datetime.timedelta(days = day_length)
