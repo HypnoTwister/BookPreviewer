@@ -585,9 +585,10 @@ class MainUI(QWidget):
             #     self.lw_catalog.addItem(fname)
             for i in range(len(readerlist)):
                 rl = readerlist[i]
-                fname = rl[0].split('.txt')[0]
-                fname += f"      {rl[1]}" if rl[1]!= '0' else ''
-                fname += f"      {rl[2]}" if rl[2]!= '0' else ''
+                fname = f"[{i+1}]-"
+                fname += rl[0].split('.txt')[0]
+                fname += f" - {rl[1]}" if rl[1]!= '0' else ''
+                fname += f" / {rl[2]}" if rl[2]!= '0' else ''
                 self.lw_catalog.addItem(fname)
 
     def on_today_widget_gui(self):
