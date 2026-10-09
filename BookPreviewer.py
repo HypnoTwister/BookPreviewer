@@ -6,6 +6,7 @@ import math
 import os
 import re
 import csv
+import json
 import datetime
 
 def resource_path(relativePath):
@@ -551,17 +552,30 @@ class MainUI(QWidget):
         item = self.lw_catalog.currentItem()
         if item is None:
             return
-        f_name = item.data(Qt.UserRole)
+        f_name = item.data(0, Qt.UserRole)
+        if not f_name:
+            return
         self.comb_file.setCurrentText(f_name)
 
     def on_dclicked_book_from_catalog(self):
-        self.on_pressed_book_from_catalog()
-        self.tab_switching()
+        item = self.lw_catalog.currentItem()
+        if item is not None and item.data(0, Qt.UserRole):
+            self.on_pressed_book_from_catalog()
+            self.tab_switching()
+        elif item is not None:
+            item.setExpanded(not item.isExpanded())
 
     def on_catalog_widget_gui(self):
         self.update_writing_count()
         self.catalog = QVBoxLayout()
-        self.lw_catalog = QListWidget()
+        self.lw_catalog = QTreeWidget()
+        self.lw_catalog.setHeaderHidden(True)
+        self.lw_catalog.setIndentation(0)
+        self.lw_catalog.setRootIsDecorated(False)
+        self.lw_catalog.setExpandsOnDoubleClick(False)
+        self.lw_catalog.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.lw_catalog.customContextMenuRequested.connect(self.catalog_context_menu)
+        self.catalog_chapter_count = 0
         self.lw_catalog.setFixedHeight(int(self.content_height*0.9))
         self.lw_catalog.setObjectName('borderblock')
         self.lw_catalog.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -571,13 +585,16 @@ class MainUI(QWidget):
         self.diagram_page_layout.addLayout(self.catalog)
 
     def update_catalog_widget(self):
+        expanded = {}
+        for i in range(self.lw_catalog.topLevelItemCount()):
+            node = self.lw_catalog.topLevelItem(i)
+            expanded[node.data(0, Qt.UserRole + 1)] = node.isExpanded()
         self.lw_catalog.clear()
         global BOOK_SHELF
         global CATALOG_CSV
         if BOOK_SHELF == '':
             BOOK_SHELF = self.GetPreset('ShelfPath')
-        if CATALOG_CSV=='':
-            CATALOG_CSV = os.path.join(BOOK_SHELF,'data/catalogue.csv').replace('\\','/')
+        CATALOG_CSV = os.path.join(BOOK_SHELF,'data/catalogue.csv').replace('\\','/')
         with open(CATALOG_CSV, mode='r', newline='',encoding='utf-8-sig') as fcsv:
             reader = csv.reader(fcsv)
             readerlist = list(reader)
@@ -590,24 +607,73 @@ class MainUI(QWidget):
                 digit_width * 4 ,
                 digit_width * 4 ,
             )
-            # for i in range(len(readerlist)):
-            #     rl = readerlist[len(readerlist) - i - 1]
-            #     fname = rl[0].split('.txt')[0]
-            #     fname += f"      {rl[1]}" if rl[1]!= '0' else ''
-            #     self.lw_catalog.addItem(fname)
+            self.catalog_rows = readerlist
+            self.catalog_chapter_count = len(readerlist)
+            self.catalog_volumes_path = os.path.join(BOOK_SHELF, 'data', 'volumes.json')
+            try:
+                with open(self.catalog_volumes_path, encoding='utf-8') as volume_file:
+                    volumes = json.load(volume_file)
+                if not isinstance(volumes, list) or any(
+                    not isinstance(v, dict) or not isinstance(v.get('name'), str)
+                    or 'start_file' not in v or 'start_index' not in v
+                    or not (
+                        (isinstance(v.get('start_file'), str) and type(v.get('start_index')) is int)
+                        or (v.get('start_file') is None and v.get('start_index') is None)
+                    ) for v in volumes
+                ):
+                    raise ValueError('分卷数据格式不正确')
+            except FileNotFoundError:
+                volumes = []
+                self.catalog_volumes = volumes
+            except (OSError, ValueError) as error:
+                self.catalog_volumes = None
+                QMessageBox.warning(self, '读取分卷失败', str(error))
+                volumes = []
+            else:
+                self.catalog_volumes = volumes
+            filenames = [row[0] for row in readerlist]
+            boundaries = {}
+            changed = False
+            for volume_index, volume in enumerate(volumes):
+                if volume['start_index'] is None:
+                    continue
+                if volume['start_file'] in filenames:
+                    start = filenames.index(volume['start_file']) + 1
+                    if volume['start_index'] != start:
+                        volume['start_index'] = start
+                        changed = True
+                else:
+                    start = volume['start_index']
+                if not 1 <= start <= len(readerlist) or start in boundaries:
+                    node = QTreeWidgetItem(self.lw_catalog, [volume['name'] + '（起点失效）'])
+                    node.setData(0, Qt.UserRole + 1, volume_index)
+                    continue
+                boundaries[start] = volume_index
+            if changed:
+                self.save_catalog_volumes()
+            parent = None
             for i in range(len(readerlist)):
                 rl = readerlist[i]
                 book_name = rl[0].split('.txt')[0]
-                item = QListWidgetItem()
-                item.setData(Qt.UserRole, book_name)
-                item.setToolTip(book_name)
-                self.lw_catalog.addItem(item)
+                if i + 1 in boundaries:
+                    volume_index = boundaries[i + 1]
+                    parent = QTreeWidgetItem(self.lw_catalog, [volumes[volume_index]['name']])
+                    parent.setData(0, Qt.UserRole + 1, volume_index)
+                    parent.setExpanded(expanded.get(volume_index, True))
+                elif parent is None:
+                    parent = QTreeWidgetItem(self.lw_catalog, ['未分卷'])
+                    parent.setData(0, Qt.UserRole + 1, -1)
+                    parent.setExpanded(expanded.get(-1, True))
+                item = QTreeWidgetItem(parent)
+                item.setData(0, Qt.UserRole, book_name)
+                item.setData(0, Qt.UserRole + 2, i)
+                item.setToolTip(0, book_name)
 
                 row = QWidget()
                 row.setAttribute(Qt.WA_TransparentForMouseEvents)
                 row.setObjectName('catalogRow')
                 layout = QHBoxLayout(row)
-                layout.setContentsMargins(8, 4, 8, 4)
+                layout.setContentsMargins(0, 4, 8, 4)
                 layout.setSpacing(2)
 
                 # 配色在 resources/style.qss 中设置。
@@ -631,8 +697,159 @@ class MainUI(QWidget):
                     layout.addWidget(label)
                 layout.addStretch()
 
-                item.setSizeHint(row.sizeHint())
-                self.lw_catalog.setItemWidget(item, row)
+                item.setSizeHint(0, row.sizeHint())
+                self.lw_catalog.setItemWidget(item, 0, row)
+
+            # 待写卷仅作规划，显示在已分配章节的卷之后。
+            for volume_index, volume in enumerate(volumes):
+                if volume['start_index'] is None:
+                    node = QTreeWidgetItem(self.lw_catalog, [volume['name']])
+                    node.setData(0, Qt.UserRole + 1, volume_index)
+            for index in range(self.lw_catalog.topLevelItemCount()):
+                parent = self.lw_catalog.topLevelItem(index)
+                chapter_range = ''
+                if parent.childCount():
+                    start = parent.child(0).data(0, Qt.UserRole + 2) + 1
+                    end = parent.child(parent.childCount() - 1).data(0, Qt.UserRole + 2) + 1
+                    chapter_range = f'{start}~{end}'
+                self.set_catalog_volume_header(parent, parent.text(0), chapter_range)
+
+    def set_catalog_volume_header(self, item, name, chapter_range):
+        # 标题由 QLabel 绘制，清空节点文字以避免重复显示。
+        item.setText(0, '')
+        row = QWidget()
+        row.setObjectName('catalogVolumeRow')
+        row.setAttribute(Qt.WA_TransparentForMouseEvents)
+        layout = QHBoxLayout(row)
+        layout.setContentsMargins(0, 4, 8, 4)
+        # layout.setSpacing(4)
+
+        name_label = QLabel(name)
+        name_label.setObjectName('catalogVolumeName')
+        name_label.setTextFormat(Qt.PlainText)
+        name_label.setToolTip(name)
+        range_label = QLabel(chapter_range)
+        range_label.setObjectName('catalogVolumeRange')
+        range_label.setTextFormat(Qt.PlainText)
+        count_label = QLabel(str(item.childCount()))
+        count_label.setObjectName('HighLight')
+        count_label.setTextFormat(Qt.PlainText)
+        count_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        count_label.setToolTip(f'当前卷共 {item.childCount()} 章')
+        layout.addWidget(name_label)
+        layout.addWidget(range_label)
+        layout.addWidget(count_label)
+        layout.addStretch()
+        # 先应用 QSS 的加粗字体，再计算行高。
+        self.lw_catalog.setItemWidget(item, 0, row)
+        row.ensurePolished()
+        name_label.ensurePolished()
+        range_label.ensurePolished()
+        count_label.ensurePolished()
+        range_metrics = range_label.fontMetrics()
+        range_digit_width = max(range_metrics.horizontalAdvance(str(n)) for n in range(10))
+        range_label.setFixedWidth(range_digit_width * 6 + range_metrics.horizontalAdvance('~'))
+        count_metrics = count_label.fontMetrics()
+        count_digit_width = max(count_metrics.horizontalAdvance(str(n)) for n in range(10))
+        count_label.setFixedWidth(count_digit_width * 3 + 4)
+        item.setSizeHint(0, row.sizeHint())
+        item.setToolTip(0, f'{name} {chapter_range}（共 {item.childCount()} 章）'.strip())
+
+    def save_catalog_volumes(self):
+        if self.catalog_volumes is None:
+            return False
+        try:
+            os.makedirs(os.path.dirname(self.catalog_volumes_path), exist_ok=True)
+            temporary = self.catalog_volumes_path + '.tmp'
+            with open(temporary, 'w', encoding='utf-8') as volume_file:
+                json.dump(self.catalog_volumes, volume_file, ensure_ascii=False, indent=2)
+            os.replace(temporary, self.catalog_volumes_path)
+            return True
+        except OSError as error:
+            QMessageBox.warning(self, '保存分卷失败', str(error))
+            return False
+
+    def catalog_context_menu(self, position):
+        item = self.lw_catalog.itemAt(position)
+        if self.catalog_volumes is None:
+            return
+        if item is None:
+            menu = QMenu(self)
+            create_action = menu.addAction('新建待写分卷')
+            if menu.exec_(self.lw_catalog.viewport().mapToGlobal(position)) != create_action:
+                return
+            name, accepted = QInputDialog.getText(self, '新建待写分卷', '卷名：')
+            if accepted and name.strip():
+                self.catalog_volumes.append({'name': name.strip(), 'start_file': None, 'start_index': None})
+                if self.save_catalog_volumes():
+                    self.update_catalog_widget()
+            return
+        chapter_index = item.data(0, Qt.UserRole + 2)
+        volume_index = item.data(0, Qt.UserRole + 1)
+        menu = QMenu(self)
+        if chapter_index is None:
+            fold_action = menu.addAction('折叠卷' if item.isExpanded() else '展开卷')
+            if volume_index == -1:
+                if menu.exec_(self.lw_catalog.viewport().mapToGlobal(position)) == fold_action:
+                    item.setExpanded(not item.isExpanded())
+                return
+        if chapter_index is not None:
+            create_action = menu.addAction('从此章开始新卷')
+            selected = menu.exec_(self.lw_catalog.viewport().mapToGlobal(position))
+            if selected != create_action:
+                return
+            # 同一卷首只能有一个分卷。
+            for volume in self.catalog_volumes:
+                filenames = [row[0] for row in self.catalog_rows]
+                start = filenames.index(volume['start_file']) + 1 if volume['start_file'] in filenames else volume['start_index']
+                if start == chapter_index + 1:
+                    QMessageBox.information(self, '分卷', '此章已经是卷首，请在卷标题上重命名或重新指定起点。')
+                    return
+            name, accepted = QInputDialog.getText(self, '新建分卷', '卷名：')
+            if not accepted or not name.strip():
+                return
+            self.catalog_volumes.append({'name': name.strip(), 'start_file': self.catalog_rows[chapter_index][0], 'start_index': chapter_index + 1})
+        elif volume_index is not None and volume_index >= 0:
+            rename_action = menu.addAction('重命名卷')
+            volume = self.catalog_volumes[volume_index]
+            reset_action = menu.addAction('指定卷首' if volume['start_index'] is None else '重新指定卷首')
+            remove_action = menu.addAction('取消分卷')
+            selected = menu.exec_(self.lw_catalog.viewport().mapToGlobal(position))
+            if selected == fold_action:
+                item.setExpanded(not item.isExpanded())
+                return
+            volume = self.catalog_volumes[volume_index]
+            if selected == rename_action:
+                name, accepted = QInputDialog.getText(self, '重命名卷', '卷名：', text=volume['name'])
+                if not accepted or not name.strip():
+                    return
+                volume['name'] = name.strip()
+            elif selected == reset_action:
+                choices = [f"[{i+1}] {row[0]}" for i, row in enumerate(self.catalog_rows)]
+                if not choices:
+                    return
+                choice, accepted = QInputDialog.getItem(self, '指定卷首', '起始章节：', choices, max(0, min((volume['start_index'] or 1) - 1, len(choices) - 1)), False)
+                if not accepted:
+                    return
+                index = choices.index(choice)
+                filenames = [row[0] for row in self.catalog_rows]
+                for other in self.catalog_volumes:
+                    if other is volume:
+                        continue
+                    start = filenames.index(other['start_file']) + 1 if other['start_file'] in filenames else other['start_index']
+                    if start == index + 1:
+                        QMessageBox.information(self, '分卷', '此章已经是其他卷的卷首。')
+                        return
+                volume['start_file'] = filenames[index]
+                volume['start_index'] = index + 1
+            elif selected == remove_action:
+                self.catalog_volumes.pop(volume_index)
+            else:
+                return
+        else:
+            return
+        if self.save_catalog_volumes():
+            self.update_catalog_widget()
 
     def on_today_widget_gui(self):
         self.update_writing_count()
@@ -982,7 +1199,7 @@ class MainUI(QWidget):
         self.chapter_summary_widget.setSummary(chapter_sum)
 
     def get_chapter_summaries(self):
-        return self.lw_catalog.count()
+        return self.catalog_chapter_count
 
     def get_recently_summaries(self, day_length = 7):
         # recently_date = Custom_today() - datetime.timedelta(days = day_length)
@@ -1237,8 +1454,7 @@ class MainUI(QWidget):
             except:
                 continue
         global CATALOG_CSV
-        if CATALOG_CSV == '':
-            CATALOG_CSV = os.path.join(BOOK_SHELF,'data/catalogue.csv').replace('\\','/')
+        CATALOG_CSV = os.path.join(BOOK_SHELF,'data/catalogue.csv').replace('\\','/')
         with open(CATALOG_CSV, mode='w', newline='',encoding='utf-8-sig') as fcsv:
             writer = csv.writer(fcsv)
             writer.writerows(catalogue_rows)

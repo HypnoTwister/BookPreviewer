@@ -42,6 +42,20 @@ QLabel#catalogCount2 {
     color: #c87920;
 }
 
+/* 卷标题和章节范围分别设置配色。 */
+QWidget#catalogVolumeRow, QWidget#catalogVolumeRow QLabel {
+    background: transparent;
+    border: none;
+    padding: 0px;
+}
+QLabel#catalogVolumeName {
+    font-weight: bold;
+    color: #3f3f3f;
+}
+QLabel#catalogVolumeRange {
+    color: #999999;
+}
+
 /* QPushButton H1 */
 QPushButton#H1 {
     /* font-size: 12px; */
