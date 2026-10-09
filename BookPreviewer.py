@@ -548,7 +548,10 @@ class MainUI(QWidget):
         self.diagram_page_layout.addStretch()
 
     def on_pressed_book_from_catalog(self):
-        f_name = self.lw_catalog.currentItem().text().split('      ')[0]
+        item = self.lw_catalog.currentItem()
+        if item is None:
+            return
+        f_name = item.data(Qt.UserRole)
         self.comb_file.setCurrentText(f_name)
 
     def on_dclicked_book_from_catalog(self):
@@ -578,6 +581,15 @@ class MainUI(QWidget):
         with open(CATALOG_CSV, mode='r', newline='',encoding='utf-8-sig') as fcsv:
             reader = csv.reader(fcsv)
             readerlist = list(reader)
+            metrics = QFontMetrics(self.lw_catalog.font())
+            digit_width = max(metrics.horizontalAdvance(str(n)) for n in range(10))
+            # 根据当前字体预留：三位序号、统一书名格式、四位数字。
+            column_widths = (
+                metrics.horizontalAdvance('[]') + digit_width * 3,
+                metrics.horizontalAdvance('第章-某某(1)') + digit_width * 3,
+                digit_width * 4 ,
+                digit_width * 4 ,
+            )
             # for i in range(len(readerlist)):
             #     rl = readerlist[len(readerlist) - i - 1]
             #     fname = rl[0].split('.txt')[0]
@@ -585,11 +597,42 @@ class MainUI(QWidget):
             #     self.lw_catalog.addItem(fname)
             for i in range(len(readerlist)):
                 rl = readerlist[i]
-                fname = f"[{i+1}]-"
-                fname += rl[0].split('.txt')[0]
-                fname += f" - {rl[1]}" if rl[1]!= '0' else ''
-                fname += f" / {rl[2]}" if rl[2]!= '0' else ''
-                self.lw_catalog.addItem(fname)
+                book_name = rl[0].split('.txt')[0]
+                item = QListWidgetItem()
+                item.setData(Qt.UserRole, book_name)
+                item.setToolTip(book_name)
+                self.lw_catalog.addItem(item)
+
+                row = QWidget()
+                row.setAttribute(Qt.WA_TransparentForMouseEvents)
+                row.setObjectName('catalogRow')
+                layout = QHBoxLayout(row)
+                layout.setContentsMargins(8, 4, 8, 4)
+                layout.setSpacing(2)
+
+                # 配色在 resources/style.qss 中设置。
+                count1 = int(rl[1])
+                count1_style = 'HighLight_Core' if count1 < 2000 or count1 > 3800 else 'HighLight'
+                texts = (
+                    (f"[{i+1}]", 'catalogIndex'),
+                    (book_name, 'catalogName'),
+                    (f"{rl[1]}" if rl[1] != '0' else '', count1_style),
+                    (f"{rl[2]}" if rl[2] != '0' else '', 'catalogCount2'),
+                )
+                for column, ((text, style_name), width) in enumerate(zip(texts, column_widths)):
+                    label = QLabel(metrics.elidedText(text, Qt.ElideRight, width))
+                    label.setObjectName(style_name)
+                    label.setTextFormat(Qt.PlainText)
+                    label.setFont(self.lw_catalog.font())
+                    label.setFixedWidth(width)
+                    label.setAlignment(
+                        (Qt.AlignRight if column >= 2 else Qt.AlignLeft) | Qt.AlignVCenter
+                    )
+                    layout.addWidget(label)
+                layout.addStretch()
+
+                item.setSizeHint(row.sizeHint())
+                self.lw_catalog.setItemWidget(item, row)
 
     def on_today_widget_gui(self):
         self.update_writing_count()

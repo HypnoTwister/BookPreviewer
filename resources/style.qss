@@ -28,12 +28,26 @@ QWidget#diagram_head{
     padding:0px;
 }
 
+/* 目录行：复用现有配色；书名沿用全局文字色 #3f3f3f。
+   第一个数字使用 HighLight / HighLight_Core 的现有蓝色和红色。 */
+QWidget#catalogRow, QWidget#catalogRow QLabel {
+    background: transparent;
+    border: none;
+    padding: 0px;
+}
+QLabel#catalogIndex {
+    color: #999999;
+}
+QLabel#catalogCount2 {
+    color: #c87920;
+}
+
 /* QPushButton H1 */
 QPushButton#H1 {
     /* font-size: 12px; */
     border: none;
     border-radius: 4px;
-    background-color: #005fba;
+    background-color: #2878c8;
     color: white;
     padding: 4px 10px;
     height:18px;
@@ -247,7 +261,7 @@ QLabel#HighLight{
     /* font-size: 12px; */
     padding: 0px;
     border: none;
-    color: #005fba;
+    color: #2878c8;
 }
 /* QLabel */
 QLabel#HighLight_Core{
@@ -255,7 +269,7 @@ QLabel#HighLight_Core{
     /* font-size: 12px; */
     padding: 0px;
     border: none;
-    color: #fc3d49;
+    color: #e03b46;
 }
 QLabel#Graph{
     /* font-weight: bold; */
@@ -414,8 +428,8 @@ QProgressBar::chunk#bar{
     background: #9e09998d;
 }
 QProgressBar::chunk#bar:hover{
-    border:1px solid #fc863d;
-    background: #fc863d;
+    border:1px solid #c87920;
+    background: #c87920;
     color: white;
 }
 QProgressBar::chunk#bar-h{
@@ -427,8 +441,8 @@ QProgressBar::chunk#bar-h{
     background: #9e09998d;
 }
 QProgressBar::chunk#bar-h:hover{
-    border:1px solid #fc863d;
-    background: #fc863d;
+    border:1px solid #c87920;
+    background: #c87920;
     color: white;
 }
 QProgressBar::chunk#bar-zero{
