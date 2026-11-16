@@ -191,15 +191,19 @@ class MainUI(QWidget):
         # GFont = QFont('微软雅黑')
         global dpi
         dpi = QGuiApplication.primaryScreen().logicalDotsPerInch()
-        self.fontPointSize = MainUIHeigthInch * self.scale * dpi / 80
+        print(dpi)
+        self.fontPointSize = MainUIHeigthInch * self.scale * 0.8 * dpi / 96
+        print(self.fontPointSize)
+        self.main_height = int(dpi * MainUIHeigthInch * self.scale)
+        self.main_width = int(9.5/20 * self.main_height)
+
         self.GFont.setPointSizeF(self.fontPointSize)
         app.setFont(self.GFont)
         self.fontPixSize = int(self.fontPointSize * dpi / 72)
+        # self.fontPixSize = max(1, round(self.main_height / 80))
         self.update_book_shelf()
         # self.main_height = int(screen_rect.height() * 0.5)
 
-        self.main_height = int(dpi * MainUIHeigthInch * self.scale)
-        self.main_width = int(9.5/20 * self.main_height)
         self.content_width = int(0.8*self.main_width)
         self.content_height = int(27/32*self.main_height)
         self.edge_spacing = self.main_height//40
@@ -1873,7 +1877,6 @@ class QSSLoader:
             return file.read()
 
 QSS_PATH = 'resources/style.qss'
-
 
 # 示例使用
 if __name__ == "__main__":
